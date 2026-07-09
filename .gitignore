@@ -1,0 +1,42 @@
+# Environnements virtuels
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Variables d'environnement
+.env
+.env.*
+
+# Bases SQLite locales
+*.sqlite
+*.sqlite3
+*.db
+
+# Journaux
+*.log
+
+# Outils de développement
+.vscode/
+.idea/
+
+# Construction Python
+build/
+dist/
+*.egg-info/
+
+# Anciennes versions et sauvegardes locales
+Old/
+
+# Documentation locale non destinée au dépôt
+docs/

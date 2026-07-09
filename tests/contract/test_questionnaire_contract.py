@@ -1,0 +1,57 @@
+from __future__ import annotations
+
+import pytest
+
+from database.services.connexion_service import ConnexionService
+from tests.factories import (
+    QCM_MATHEMATIQUES,
+    creer_questionnaire_math,
+)
+
+
+pytestmark = [
+    pytest.mark.unit,
+    pytest.mark.contract,
+]
+
+
+def test_qcm_contient_dix_questions_et_quatre_propositions_par_question(
+    session,
+):
+    service = ConnexionService(session)
+    enseignant = service.inscrireEnseignant(
+        "enseignant.qcm",
+        "MotDePasse-2026",
+    )
+
+    questionnaire = creer_questionnaire_math(enseignant)
+
+    assert len(questionnaire.questions) == 10
+    assert all(
+        len(question.propositions) == 4
+        for question in questionnaire.questions
+    )
+
+
+def test_chaque_question_possede_une_seule_bonne_reponse(session):
+    service = ConnexionService(session)
+    enseignant = service.inscrireEnseignant(
+        "enseignant.reponses",
+        "MotDePasse-2026",
+    )
+
+    questionnaire = creer_questionnaire_math(enseignant)
+
+    for question in questionnaire.questions:
+        propositions_correctes = [
+            proposition
+            for proposition in question.propositions
+            if proposition.est_correcte
+        ]
+        assert len(propositions_correctes) == 1
+
+
+def test_contenu_du_qcm_est_deterministe():
+    assert len(QCM_MATHEMATIQUES) == 10
+    assert QCM_MATHEMATIQUES[0].index_correct == 1
+    assert QCM_MATHEMATIQUES[-1].index_correct == 1
