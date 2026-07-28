@@ -4,24 +4,55 @@ from __future__ import annotations
 from datetime import date
 from typing import TYPE_CHECKING
 
+from database.models.models_participants import Eleve, Equipe
+from database.models.models_scolaire import Niveau
+
 if TYPE_CHECKING:
-    from database.models.models_utilisateurs import Utilisateur, Enseignant
-    from database.models.models_scolaire import Etablissement, NiveauScolaire, ListeEtablissement
-    from database.models.models_participants import Eleve, Groupe, BulletinParticipation
+    from database.models.models_participants import (
+        BulletinParticipation,
+    )
+    from database.models.models_scolaire import (
+        Etablissement,
+        ListeEtablissement,
+    )
+    from database.models.models_utilisateurs import (
+        Enseignant,
+        Utilisateur,
+    )
+    from database.services.bulletin_participation_bd import (
+        BulletinParticipationBD,
+    )
+    from database.services.equipe_bd import EquipeBD
+    from database.services.parcours_scolaire_bd import (
+        ParcoursScolaireBD,
+    )
 
 
 class ManagementParcoursScolaire:
     """
     Contrôleur d'orchestration pour l'environnement scolaire.
 
-    Cette classe gère les cas d'usage :
-    recherche d'établissement, rattachement de niveau, création et
-    modification d'élèves, création de groupes et consultation des bulletins.
+    Cette classe gère les cas d'usage suivants :
+    - recherche et rattachement d'un établissement ;
+    - rattachement d'un niveau scolaire ;
+    - création, consultation et modification des élèves ;
+    - création de groupes ;
+    - consultation des bulletins de participation.
     """
 
     @staticmethod
     def _est_admin(utilisateur: "Utilisateur") -> bool:
-        return getattr(utilisateur, "type_utilisateur", None) == "admin"
+        """
+        Vérifie si l'utilisateur possède le rôle d'administrateur.
+        """
+        return (
+            getattr(
+                utilisateur,
+                "type_utilisateur",
+                None,
+            )
+            == "admin"
+        )
 
     def _verifier_droits(
         self,
@@ -29,14 +60,18 @@ class ManagementParcoursScolaire:
         enseignant: "Enseignant",
     ) -> None:
         """
-        Autorise l'action si l'utilisateur est admin ou s'il agit sur lui-même.
+        Autorise l'action si l'utilisateur est administrateur
+        ou s'il agit sur son propre environnement scolaire.
         """
         if self._est_admin(utilisateur):
             return
+
         if utilisateur.id == enseignant.id:
             return
+
         raise PermissionError(
-            "Vous ne pouvez agir que sur votre propre environnement scolaire."
+            "Vous ne pouvez agir que sur votre propre "
+            "environnement scolaire."
         )
 
     def rechercherEtablissement(
@@ -50,9 +85,8 @@ class ManagementParcoursScolaire:
         """
         Recherche un établissement dans la liste de référence.
 
-        Cette méthode reste volontairement stricte : si plusieurs résultats
-        sont trouvés, le contrôleur d'interface doit demander à l'utilisateur
-        de préciser sa sélection.
+        Si plusieurs résultats sont trouvés, l'interface doit demander
+        à l'utilisateur de préciser sa sélection.
         """
         resultats = fichier.rechercher(
             nom=nom,
@@ -61,11 +95,14 @@ class ManagementParcoursScolaire:
         )
 
         if not resultats:
-            raise ValueError("Aucun établissement ne correspond à la recherche.")
+            raise ValueError(
+                "Aucun établissement ne correspond à la recherche."
+            )
 
         if len(resultats) > 1:
             raise ValueError(
-                "Recherche ambiguë : plusieurs établissements correspondent."
+                "Recherche ambiguë : plusieurs établissements "
+                "correspondent."
             )
 
         return resultats[0]
@@ -82,15 +119,19 @@ class ManagementParcoursScolaire:
         Rattache un établissement à un enseignant.
         """
         acteur = utilisateur or enseignant
-        self._verifier_droits(acteur, enseignant)
+        self._verifier_droits(
+            acteur,
+            enseignant,
+        )
 
         enseignant.nom_etablissement = e.getNom()
+
         parcours_scolaire_bd.sauvegarderEtablissement(
             enseignant_id=enseignant.id,
             etablissement=e,
         )
 
-    def rattacherNiveauScolaire(
+    def rattacherNiveau(
         self,
         nom: str,
         e: "Etablissement",
@@ -98,19 +139,27 @@ class ManagementParcoursScolaire:
         parcours_scolaire_bd: "ParcoursScolaireBD",
         *,
         utilisateur: "Utilisateur | None" = None,
-    ) -> "NiveauScolaire":
+    ) -> Niveau:
         """
-        Crée un niveau scolaire rattaché à un établissement et à un enseignant.
+        Crée un niveau scolaire rattaché à un établissement
+        et à un enseignant.
         """
         acteur = utilisateur or enseignant
-        self._verifier_droits(acteur, enseignant)
+        self._verifier_droits(
+            acteur,
+            enseignant,
+        )
 
-        niveau = NiveauScolaire(
+        niveau = Niveau(
             nom=nom,
             etablissement_id=e.getId(),
             enseignant_id=enseignant.id,
         )
-        parcours_scolaire_bd.sauvegarderNiveauScolaire(niveau)
+
+        parcours_scolaire_bd.sauvegarderNiveau(
+            niveau
+        )
+
         return niveau
 
     def ajouterEleve(
@@ -118,11 +167,11 @@ class ManagementParcoursScolaire:
         nom: str,
         prenom: str,
         date_naissance: date,
-        niveau: "NiveauScolaire",
+        niveau: Niveau,
         redoublant: bool,
         parcours_scolaire_bd: "ParcoursScolaireBD",
         **kwargs,
-    ) -> "Eleve":
+    ) -> Eleve:
         """
         Ajoute un élève à un niveau scolaire.
         """
@@ -133,24 +182,33 @@ class ManagementParcoursScolaire:
             redoublant=redoublant,
             **kwargs,
         )
+
         niveau.ajouterEleve(eleve)
-        parcours_scolaire_bd.sauvegarderEleve(eleve)
+
+        parcours_scolaire_bd.sauvegarderEleve(
+            eleve
+        )
+
         return eleve
 
     def consulterEleves(
         self,
-        niveau: "NiveauScolaire",
+        niveau: Niveau,
         e: "Etablissement",
         parcours_scolaire_bd: "ParcoursScolaireBD",
-    ) -> list["Eleve"]:
+    ) -> list[Eleve]:
         """
         Retourne les élèves d'un niveau pour un établissement donné.
         """
         if niveau.getEtablissementId() != e.getId():
             raise ValueError(
-                "Le niveau scolaire fourni n'appartient pas à l'établissement demandé."
+                "Le niveau scolaire fourni n'appartient pas "
+                "à l'établissement demandé."
             )
-        return parcours_scolaire_bd.chargerElevesParNiveau(niveau.getId())
+
+        return parcours_scolaire_bd.chargerElevesParNiveau(
+            niveau.getId()
+        )
 
     def modifierEleve(
         self,
@@ -161,27 +219,46 @@ class ManagementParcoursScolaire:
         """
         Modifie un élève existant.
 
-        Les champs réellement modifiables sont contrôlés par le modèle `Eleve`.
+        Les champs réellement modifiables sont contrôlés
+        par le modèle Eleve.
         """
-        eleve = parcours_scolaire_bd.chargerEleve(eleve_id)
-        if eleve is None:
-            raise ValueError(f"Aucun élève ne correspond à l'identifiant {eleve_id}.")
+        eleve = parcours_scolaire_bd.chargerEleve(
+            eleve_id
+        )
 
-        eleve.mettre_a_jour(**modifications)
-        parcours_scolaire_bd.sauvegarderEleve(eleve)
+        if eleve is None:
+            raise ValueError(
+                "Aucun élève ne correspond à l'identifiant "
+                f"{eleve_id}."
+            )
+
+        eleve.mettre_a_jour(
+            **modifications
+        )
+
+        parcours_scolaire_bd.sauvegarderEleve(
+            eleve
+        )
 
     def creerGroupe(
         self,
         nom: str,
-        eleves: list["Eleve"],
-        groupe_bd: "GroupeBD",
-    ) -> "Groupe":
+        eleves: list[Eleve],
+        equipe_bd: "EquipeBD",
+    ) -> Equipe:
         """
-        Crée un groupe à partir d'une liste d'élèves.
+        Crée une équipe à partir d'une liste d'élèves.
         """
-        groupe = Groupe.creer_depuis_eleves(nom=nom, eleves=eleves)
-        groupe_bd.sauvegarder(groupe)
-        return groupe
+        equipe = Equipe.creer_depuis_eleves(
+            nom=nom,
+            eleves=eleves,
+        )
+
+        equipe_bd.sauvegarder(
+            equipe
+        )
+
+        return equipe
 
     def consulterBulletin(
         self,
@@ -191,4 +268,6 @@ class ManagementParcoursScolaire:
         """
         Retourne les bulletins de participation d'un élève.
         """
-        return bulletin_bd.chargerParEleve(eleve_id)
+        return bulletin_bd.chargerParEleve(
+            eleve_id
+        )

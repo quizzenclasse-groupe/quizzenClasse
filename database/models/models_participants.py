@@ -126,7 +126,7 @@ class Participation(Model):
 
 class Equipe(Participant):
     """
-    Groupe d'élèves participant collectivement à une session.
+    Equipe d'élèves participant collectivement à une session.
     """
 
     nom_equipe: Mapped[str | None] = mapped_column(
@@ -163,21 +163,20 @@ class Equipe(Participant):
         nom = nom.strip()
 
         if not nom:
-            raise ValueError("Le nom du groupe est obligatoire.")
+            raise ValueError("Le nom de l'equipe est obligatoire.")
 
         if not eleves:
             raise ValueError(
-                "Un groupe doit contenir au moins un élève."
+                "Une équipe doit contenir au moins un élève."
             )
 
-        groupe = cls(nom_equipe=nom)
-        groupe.membres.extend(eleves)
+        equipe = cls(nom_equipe=nom)
+        equipe.membres.extend(eleves)
 
-        return groupe
+        return equipe
 
 
-# Correspondance avec le vocabulaire retenu dans l'UML.
-Groupe = Equipe
+
 
 
 class Eleve(Participant):
