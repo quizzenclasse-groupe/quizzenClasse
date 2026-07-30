@@ -2,7 +2,15 @@
 # Formation : L2 Informatique - IED, Université Paris 8
 # Rôle du fichier : Gestion des cours ; écran non affiché dans le tableau de bord actuel.
 
-"""Gestion des cours via les routes CRUD déjà fournies par l'API."""
+"""Gestion des cours via les routes CRUD déjà fournies par l'API.
+
+Écran fonctionnel (le CRUD complet de l'API cours est bien implémenté) mais
+volontairement retiré de la navigation du tableau de bord : dans le
+fonctionnement actuel de l'application, un « cours » ne se limite qu'à un
+nom et une description, sans lien réel avec les questionnaires ou les
+sessions, ce qui n'apportait rien à l'usage réel par l'enseignant. Voir le
+rapport, section choix de conception, pour le détail de cette décision.
+"""
 from __future__ import annotations
 
 import tkinter as tk
@@ -13,25 +21,18 @@ from gui.common.page import create_page_header
 
 
 class CoursWindow(ttk.Frame):
+    """Écran CRUD complet pour l'entité « cours » (nom + description).
+
+    Non relié au tableau de bord (voir le module docstring) mais laissé
+    fonctionnel et testé au cas où l'entité serait exploitée plus tard.
     """
-    Représente cours window dans l'interface graphique QuizzenClasse.
-    
-    La classe rassemble les widgets de cet écran, les variables Tkinter associées
-    et les méthodes déclenchées par les actions de l'utilisateur.
-    """
+
     def __init__(self, parent) -> None:
-        """
-        Initialise l'objet et prépare les données ainsi que les widgets nécessaires à son fonctionnement.
-        
+        """Initialise l'état de l'écran, construit le formulaire et le tableau, puis charge les cours existants.
+
         Paramètres :
-            parent : widget parent qui contient le composant.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
+            parent : fenêtre principale de l'application (fournit
+                ``api_client`` et ``show_dashboard`` pour le bouton retour).
         """
         super().__init__(parent, padding=18)
         self.parent = parent
@@ -45,16 +46,7 @@ class CoursWindow(ttk.Frame):
         self.refresh()
 
     def _create_widgets(self) -> None:
-        """
-        Effectue le traitement correspondant à create widgets dans le contexte de cette fenêtre.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Construit le formulaire (nom, description) et le tableau des cours existants."""
         form = ttk.LabelFrame(self, text="Cours", padding=12)
         form.pack(fill="x", pady=(10, 8))
         ttk.Label(form, text="Nom du cours * :").grid(row=0, column=0, sticky="w", pady=4)
@@ -89,22 +81,11 @@ class CoursWindow(ttk.Frame):
         self.tree.grid(row=0, column=0, sticky="nsew")
         sy.grid(row=0, column=1, sticky="ns")
         sx.grid(row=1, column=0, sticky="ew")
-        # Associe le traitement à un événement Tkinter ou à une exécution différée.
         self.tree.bind("<<TreeviewSelect>>", self._load_selected)
 
     def _payload(self) -> dict | None:
-        """
-        Effectue le traitement correspondant à payload dans le contexte de cette fenêtre.
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Valide et construit le payload (nom, description) envoyé à l'API, ou ``None`` si le nom est vide."""
         nom = self.nom_var.get().strip()
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
         if not nom:
             messagebox.showwarning("Nom obligatoire", "Saisissez le nom du cours.")
             return None
@@ -112,109 +93,51 @@ class CoursWindow(ttk.Frame):
         return {"nom_cours": nom, "description": description}
 
     def create(self) -> None:
-        """
-        Effectue le traitement correspondant à create dans le contexte de cette fenêtre.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Valide le formulaire puis crée un nouveau cours."""
         payload = self._payload()
         if payload is None:
             return
-        # Exécute l'opération correspondante auprès du serveur puis récupère sa réponse.
         result = run_api_action(lambda: self.api.create_cours(payload))
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
         if result is not None:
             self.clear(); self.refresh()
             messagebox.showinfo("Cours", "Cours créé.")
 
     def update(self) -> None:
-        """
-        Effectue le traitement correspondant à update dans le contexte de cette fenêtre.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
+        """Met à jour le cours sélectionné avec les valeurs actuelles du formulaire."""
         if self.selected_id is None:
             messagebox.showwarning("Sélection", "Sélectionnez un cours à modifier.")
             return
         payload = self._payload()
         if payload is None:
             return
-        # Exécute l'opération correspondante auprès du serveur puis récupère sa réponse.
         result = run_api_action(lambda: self.api.update_cours(self.selected_id, payload))
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
         if result is not None:
             self.clear(); self.refresh()
             messagebox.showinfo("Cours", "Cours modifié.")
 
     def delete(self) -> None:
-        """
-        Effectue le traitement correspondant à delete dans le contexte de cette fenêtre.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
+        """Supprime le cours sélectionné après confirmation de l'utilisateur."""
         if self.selected_id is None:
             messagebox.showwarning("Sélection", "Sélectionnez un cours à supprimer.")
             return
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
         if not messagebox.askyesno("Confirmation", "Supprimer ce cours ?"):
             return
-        # Exécute l'opération correspondante auprès du serveur puis récupère sa réponse.
         result = run_api_action(lambda: self.api.delete_cours(self.selected_id))
         if result:
             self.clear(); self.refresh()
 
     def refresh(self) -> None:
-        """
-        Recharge les données affichées afin de présenter l'état le plus récent de l'application.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Recharge la liste des cours depuis l'API et repeuple le tableau."""
         items = run_api_action(self.api.list_cours)
         if items is None:
             return
         self.cours_by_id = {item["id"]: item for item in items}
-        # Met à jour le contenu du tableau affiché dans l'interface.
         self.tree.delete(*self.tree.get_children())
-        # Met à jour le contenu du tableau affiché dans l'interface.
         for item in items:
             self.tree.insert("", "end", iid=str(item["id"]), values=(item.get("nom_cours", ""), item.get("description") or ""))
 
     def _load_selected(self, _event=None) -> None:
-        """
-        Effectue le traitement correspondant à load selected dans le contexte de cette fenêtre.
-        
-        Paramètres :
-            _event : donnée nécessaire au traitement de « event ».
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Recopie les données du cours sélectionné dans le formulaire (pour modification)."""
         selection = self.tree.selection()
         if not selection:
             return
@@ -225,16 +148,7 @@ class CoursWindow(ttk.Frame):
         self.description_text.insert("1.0", item.get("description") or "")
 
     def clear(self) -> None:
-        """
-        Effectue le traitement correspondant à clear dans le contexte de cette fenêtre.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Vide le formulaire de saisie d'un cours."""
         self.selected_id = None
         self.nom_var.set("")
         self.description_text.delete("1.0", "end")

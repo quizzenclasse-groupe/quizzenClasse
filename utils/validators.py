@@ -23,38 +23,11 @@ import re
 
 
 def clean_text(value: str) -> str:
-    """
-    Effectue le traitement correspondant à clean text dans le contexte de cette fenêtre.
-    
-    Paramètres :
-        value : donnée nécessaire au traitement de « value ».
-    
-    Retour :
-        Données calculées ou récupérées par la méthode.
-    
-    Traitement :
-        Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-        d'actualiser les widgets concernés ou de poursuivre la navigation.
-    """
-
+    # Enlève les espaces en trop, y compris ceux au milieu du texte.
     return " ".join(value.strip().split())
 
 
 def is_required(value: str) -> bool:
-    """
-    Effectue le traitement correspondant à is required dans le contexte de cette fenêtre.
-    
-    Paramètres :
-        value : donnée nécessaire au traitement de « value ».
-    
-    Retour :
-        Données calculées ou récupérées par la méthode.
-    
-    Traitement :
-        Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-        d'actualiser les widgets concernés ou de poursuivre la navigation.
-    """
-
     return bool(clean_text(value))
 
 
@@ -62,21 +35,7 @@ def validate_date(
     value: str,
     date_format: str = "%d/%m/%Y",
 ) -> tuple[bool, str]:
-    """
-    Valide date et synchronise l'affichage avec le résultat obtenu.
-    
-    Paramètres :
-        value : donnée nécessaire au traitement de « value ».
-        date_format : donnée nécessaire au traitement de « date format ».
-    
-    Retour :
-        Données calculées ou récupérées par la méthode.
-    
-    Traitement :
-        Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-        d'actualiser les widgets concernés ou de poursuivre la navigation.
-    """
-
+    """Vérifie qu'une date de naissance est présente, au bon format, et pas dans le futur."""
     cleaned_value = clean_text(value)
 
     if not cleaned_value:
@@ -103,20 +62,7 @@ def validate_date(
 
 
 def validate_postal_code(value: str) -> tuple[bool, str]:
-    """
-    Valide postal code et synchronise l'affichage avec le résultat obtenu.
-    
-    Paramètres :
-        value : donnée nécessaire au traitement de « value ».
-    
-    Retour :
-        Données calculées ou récupérées par la méthode.
-    
-    Traitement :
-        Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-        d'actualiser les widgets concernés ou de poursuivre la navigation.
-    """
-
+    # Un code postal français = 5 chiffres, rien d'autre.
     cleaned_value = clean_text(value)
 
     if not cleaned_value:
@@ -135,21 +81,7 @@ def validate_person_name(
     value: str,
     field_name: str,
 ) -> tuple[bool, str]:
-    """
-    Valide person name et synchronise l'affichage avec le résultat obtenu.
-    
-    Paramètres :
-        value : donnée nécessaire au traitement de « value ».
-        field_name : donnée nécessaire au traitement de « field name ».
-    
-    Retour :
-        Données calculées ou récupérées par la méthode.
-    
-    Traitement :
-        Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-        d'actualiser les widgets concernés ou de poursuivre la navigation.
-    """
-
+    """Vérifie qu'un nom/prénom n'est pas vide, fait au moins 2 caractères et ne contient que des lettres, espaces, tirets ou apostrophes."""
     cleaned_value = clean_text(value)
 
     if not cleaned_value:
@@ -176,21 +108,6 @@ def validate_required_text(
     value: str,
     field_name: str,
 ) -> tuple[bool, str]:
-    """
-    Valide required text et synchronise l'affichage avec le résultat obtenu.
-    
-    Paramètres :
-        value : donnée nécessaire au traitement de « value ».
-        field_name : donnée nécessaire au traitement de « field name ».
-    
-    Retour :
-        Données calculées ou récupérées par la méthode.
-    
-    Traitement :
-        Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-        d'actualiser les widgets concernés ou de poursuivre la navigation.
-    """
-
     if not is_required(value):
         return False, f"Le champ « {field_name} » est obligatoire."
 

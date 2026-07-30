@@ -12,6 +12,13 @@ les niveaux et les élèves pendant l'exécution de l'application.
 
 Dans une future version, ce stockage local pourra être remplacé par des appels
 à l'API sans modifier profondément les fenêtres graphiques.
+
+Remarque de relecture : DataStore est instanciée dans gui_main.py
+(self.data_store) mais n'est en fait appelée par aucune fenêtre de la GUI
+actuelle, tout passe par api_client (ApiClient ou LocalClient). C'est un
+reliquat d'une version antérieure où les niveaux/élèves étaient gérés en
+mémoire avant le passage à l'API ; gardé ici car il pourrait resservir en
+mode hors ligne, mais il n'est pas branché sur le LocalClient actuel.
 """
 
 from __future__ import annotations
@@ -21,25 +28,9 @@ from typing import Optional
 
 
 class DataStore:
-    """
-    Représente data store dans l'interface graphique QuizzenClasse.
-    
-    La classe rassemble les widgets de cet écran, les variables Tkinter associées
-    et les méthodes déclenchées par les actions de l'utilisateur.
-    """
+    """Stockage en mémoire des niveaux et des élèves (non relié à la GUI active, voir docstring du module)."""
 
     def __init__(self) -> None:
-        """
-        Initialise l'objet et prépare les données ainsi que les widgets nécessaires à son fonctionnement.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
-
         self._niveaux: list[dict] = []
         self._eleves: list[dict] = []
 
@@ -52,38 +43,12 @@ class DataStore:
     # ------------------------------------------------------------------
 
     def get_niveaux(self) -> list[dict]:
-        """
-        Récupère niveaux et synchronise l'affichage avec le résultat obtenu.
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
-
         return deepcopy(self._niveaux)
 
     def get_niveau_by_id(self, niveau_id: int) -> Optional[dict]:
-        """
-        Récupère niveau by id et synchronise l'affichage avec le résultat obtenu.
-        
-        Paramètres :
-            niveau_id : identifiant du niveau concerné.
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
-
         for niveau in self._niveaux:
             if niveau["id"] == niveau_id:
                 return deepcopy(niveau)
-
         return None
 
     def add_niveau(
@@ -93,23 +58,6 @@ class DataStore:
         ville: str,
         etablissement: str,
     ) -> dict:
-        """
-        Ajoute niveau et synchronise l'affichage avec le résultat obtenu.
-        
-        Paramètres :
-            nom_niveau : donnée nécessaire au traitement de « nom niveau ».
-            matiere : donnée nécessaire au traitement de « matiere ».
-            ville : donnée nécessaire au traitement de « ville ».
-            etablissement : donnée nécessaire au traitement de « etablissement ».
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
-
         niveau = {
             "id": self._next_niveau_id,
             "nom_niveau": nom_niveau,
@@ -131,24 +79,6 @@ class DataStore:
         ville: str,
         etablissement: str,
     ) -> bool:
-        """
-        Met à jour niveau et synchronise l'affichage avec le résultat obtenu.
-        
-        Paramètres :
-            niveau_id : identifiant du niveau concerné.
-            nom_niveau : donnée nécessaire au traitement de « nom niveau ».
-            matiere : donnée nécessaire au traitement de « matiere ».
-            ville : donnée nécessaire au traitement de « ville ».
-            etablissement : donnée nécessaire au traitement de « etablissement ».
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
-
         for niveau in self._niveaux:
             if niveau["id"] == niveau_id:
                 niveau["nom_niveau"] = nom_niveau
@@ -160,20 +90,7 @@ class DataStore:
         return False
 
     def delete_niveau(self, niveau_id: int) -> bool:
-        """
-        Supprime niveau et synchronise l'affichage avec le résultat obtenu.
-        
-        Paramètres :
-            niveau_id : identifiant du niveau concerné.
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
-
+        # On refuse de supprimer un niveau qui a encore des élèves rattachés.
         if self.niveau_has_eleves(niveau_id):
             return False
 
@@ -185,20 +102,6 @@ class DataStore:
         return False
 
     def niveau_has_eleves(self, niveau_id: int) -> bool:
-        """
-        Effectue le traitement correspondant à niveau has eleves dans le contexte de cette fenêtre.
-        
-        Paramètres :
-            niveau_id : identifiant du niveau concerné.
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
-
         return any(
             eleve["niveau_id"] == niveau_id
             for eleve in self._eleves
@@ -209,22 +112,7 @@ class DataStore:
         nom_niveau: str,
         etablissement: str,
         ignored_niveau_id: Optional[int] = None,) -> bool:
-        """
-        Effectue le traitement correspondant à niveau name exists dans le contexte de cette fenêtre.
-        
-        Paramètres :
-            nom_niveau : donnée nécessaire au traitement de « nom niveau ».
-            etablissement : donnée nécessaire au traitement de « etablissement ».
-            ignored_niveau_id : donnée nécessaire au traitement de « ignored niveau id ».
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
-
+        """Vérifie si un niveau du même nom existe déjà dans le même établissement (pour éviter les doublons)."""
         normalized_name = nom_niveau.strip().casefold()
         normalized_etablissement = etablissement.strip().casefold()
 
@@ -250,38 +138,12 @@ class DataStore:
     # ------------------------------------------------------------------
 
     def get_eleves(self) -> list[dict]:
-        """
-        Récupère eleves et synchronise l'affichage avec le résultat obtenu.
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
-
         return deepcopy(self._eleves)
 
     def get_eleve_by_id(self, eleve_id: int) -> Optional[dict]:
-        """
-        Récupère eleve by id et synchronise l'affichage avec le résultat obtenu.
-        
-        Paramètres :
-            eleve_id : identifiant de l’élève concerné.
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
-
         for eleve in self._eleves:
             if eleve["id"] == eleve_id:
                 return deepcopy(eleve)
-
         return None
 
     def add_eleve(
@@ -294,26 +156,6 @@ class DataStore:
         cp: str,
         niveau_id: int,
     ) -> dict:
-        """
-        Ajoute eleve et synchronise l'affichage avec le résultat obtenu.
-        
-        Paramètres :
-            nom_eleve : donnée nécessaire au traitement de « nom eleve ».
-            prenom : donnée nécessaire au traitement de « prenom ».
-            date_naissance : donnée nécessaire au traitement de « date naissance ».
-            redoublant : donnée nécessaire au traitement de « redoublant ».
-            ville : donnée nécessaire au traitement de « ville ».
-            cp : donnée nécessaire au traitement de « cp ».
-            niveau_id : identifiant du niveau concerné.
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
-
         eleve = {
             "id": self._next_eleve_id,
             "nom_eleve": nom_eleve,
@@ -341,27 +183,6 @@ class DataStore:
         cp: str,
         niveau_id: int,
     ) -> bool:
-        """
-        Met à jour eleve et synchronise l'affichage avec le résultat obtenu.
-        
-        Paramètres :
-            eleve_id : identifiant de l’élève concerné.
-            nom_eleve : donnée nécessaire au traitement de « nom eleve ».
-            prenom : donnée nécessaire au traitement de « prenom ».
-            date_naissance : donnée nécessaire au traitement de « date naissance ».
-            redoublant : donnée nécessaire au traitement de « redoublant ».
-            ville : donnée nécessaire au traitement de « ville ».
-            cp : donnée nécessaire au traitement de « cp ».
-            niveau_id : identifiant du niveau concerné.
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
-
         for eleve in self._eleves:
             if eleve["id"] == eleve_id:
                 eleve["nom_eleve"] = nom_eleve
@@ -376,20 +197,8 @@ class DataStore:
         return False
 
     def delete_eleve(self, eleve_id: int) -> bool:
-        """
-        Supprime eleve et synchronise l'affichage avec le résultat obtenu.
-        
-        Paramètres :
-            eleve_id : identifiant de l’élève concerné.
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
-
+        # Contrairement à l'API réelle (voir le rapport), cette version de
+        # démo autorise bien la suppression d'un élève.
         for index, eleve in enumerate(self._eleves):
             if eleve["id"] == eleve_id:
                 del self._eleves[index]
@@ -398,20 +207,6 @@ class DataStore:
         return False
 
     def get_eleves_by_niveau(self, niveau_id: int) -> list[dict]:
-        """
-        Récupère eleves by niveau et synchronise l'affichage avec le résultat obtenu.
-        
-        Paramètres :
-            niveau_id : identifiant du niveau concerné.
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
-
         return [
             deepcopy(eleve)
             for eleve in self._eleves

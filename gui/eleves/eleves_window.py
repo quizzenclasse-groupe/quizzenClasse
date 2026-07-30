@@ -14,25 +14,24 @@ from .niveau_section import NiveauSection
 
 
 class ElevesWindow(ttk.Frame):
+    """Écran de gestion des niveaux et des élèves : deux panneaux côte à côte, redimensionnables.
+
+    À gauche ``NiveauSection`` (liste des niveaux de l'enseignant), à
+    droite ``EleveSection`` (élèves du niveau sélectionné). Cette classe
+    ne fait aucun appel API elle-même : c'est un pur coordinateur qui
+    relie les deux sections par deux callbacks croisés — sélectionner un
+    niveau à gauche recharge les élèves à droite, et ajouter/modifier un
+    élève à droite met à jour l'effectif affiché à gauche. Toute la
+    logique métier (formulaires, validation, appels API) vit dans les
+    deux sections elles-mêmes.
     """
-    Représente eleves window dans l'interface graphique QuizzenClasse.
-    
-    La classe rassemble les widgets de cet écran, les variables Tkinter associées
-    et les méthodes déclenchées par les actions de l'utilisateur.
-    """
+
     def __init__(self, parent) -> None:
-        """
-        Initialise l'objet et prépare les données ainsi que les widgets nécessaires à son fonctionnement.
-        
+        """Construit l'en-tête et les deux sections, puis charge les données initiales.
+
         Paramètres :
-            parent : widget parent qui contient le composant.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
+            parent : fenêtre principale de l'application (fournit
+                ``api_client`` et ``show_dashboard`` pour le bouton retour).
         """
         super().__init__(parent, padding=15)
         self.parent = parent
@@ -44,32 +43,14 @@ class ElevesWindow(ttk.Frame):
         self.eleve_section.refresh_niveaux()
 
     def _create_header(self) -> None:
-        """
-        Effectue le traitement correspondant à create header dans le contexte de cette fenêtre.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Construit le titre de la page et le bouton de retour au tableau de bord."""
         header = ttk.Frame(self)
         header.pack(fill="x", pady=(0, 15))
         ttk.Label(header, text="Gestion des niveaux et des élèves", font=("Arial", 20, "bold")).pack(side="left")
         ttk.Button(header, text="Retour au tableau de bord", command=self.parent.show_dashboard).pack(side="right")
 
     def _create_content(self) -> None:
-        """
-        Effectue le traitement correspondant à create content dans le contexte de cette fenêtre.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Place ``NiveauSection`` et ``EleveSection`` dans un ``Panedwindow`` horizontal redimensionnable."""
         main_content = ttk.Panedwindow(self, orient=tk.HORIZONTAL)
         main_content.pack(fill="both", expand=True)
         self.niveau_section = NiveauSection(main_content, self.api, self._handle_niveau_selected)
@@ -78,34 +59,10 @@ class ElevesWindow(ttk.Frame):
         main_content.add(self.eleve_section, weight=2)
 
     def _handle_niveau_selected(self, niveau_id) -> None:
-        """
-        Effectue le traitement correspondant à handle niveau selected dans le contexte de cette fenêtre.
-        
-        Paramètres :
-            niveau_id : identifiant du niveau concerné.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Relaie le changement de niveau sélectionné vers ``EleveSection``."""
         self.eleve_section.set_current_niveau(niveau_id)
 
     def _handle_student_niveau_changed(self, niveau_id: int) -> None:
-        """
-        Effectue le traitement correspondant à handle student niveau changed dans le contexte de cette fenêtre.
-        
-        Paramètres :
-            niveau_id : identifiant du niveau concerné.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Rafraîchit le tableau des niveaux (effectif) après l'ajout ou la modification d'un élève."""
         self.niveau_section.refresh(niveau_id)
         self.eleve_section.set_current_niveau(niveau_id)

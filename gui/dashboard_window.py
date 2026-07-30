@@ -16,26 +16,20 @@ from tkinter import ttk
 
 
 class DashboardWindow(ttk.Frame):
-    """
-    Représente dashboard window dans l'interface graphique QuizzenClasse.
-    
-    La classe rassemble les widgets de cet écran, les variables Tkinter associées
-    et les méthodes déclenchées par les actions de l'utilisateur.
+    """Écran d'accueil affiché après connexion : identité de l'enseignant et boutons de navigation.
+
+    Ne contient aucune logique métier propre : chaque bouton délègue
+    directement à une méthode ``show_...`` de la fenêtre racine
+    (``parent``), qui se charge de basculer vers l'écran correspondant.
     """
 
     def __init__(self, parent) -> None:
-        """
-        Initialise l'objet et prépare les données ainsi que les widgets nécessaires à son fonctionnement.
-        
+        """Construit l'en-tête, les boutons de navigation puis le pied de page.
+
         Paramètres :
-            parent : widget parent qui contient le composant.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
+            parent : fenêtre racine de l'application, qui porte
+                ``current_user`` ainsi que les méthodes ``show_...`` et
+                ``logout`` utilisées par les boutons de cet écran.
         """
 
         super().__init__(
@@ -71,16 +65,7 @@ class DashboardWindow(ttk.Frame):
         self.create_footer()
 
     def create_header(self) -> None:
-        """
-        Crée header et synchronise l'affichage avec le résultat obtenu.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Construit le titre, le nom de l'enseignant connecté et son établissement."""
 
         header_frame = ttk.Frame(self)
 
@@ -142,15 +127,11 @@ class DashboardWindow(ttk.Frame):
         )
 
     def create_navigation_buttons(self) -> None:
-        """
-        Crée navigation buttons et synchronise l'affichage avec le résultat obtenu.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
+        """Construit les boutons d'accès aux modules fonctionnels de l'application.
+
+        Le module « Cours » n'apparaît volontairement pas dans cette liste
+        (voir ``gui/cours/cours_window.py`` pour le détail de ce choix) :
+        l'écran existe et fonctionne, mais n'est pas relié à la navigation.
         """
 
         navigation_frame = ttk.LabelFrame(
@@ -182,9 +163,6 @@ class DashboardWindow(ttk.Frame):
                 "Gérer les niveaux et les élèves",
                 self.parent.show_eleves,
             ),
-            # Le module Cours n’est pas affiché dans le tableau de bord actuel : ses opérations de base
-            # sont conservées dans le code, mais il n'est pas encore relié aux
-            # niveaux, questionnaires ou sessions par les services disponibles.
             (
                 "Créer un questionnaire",
                 self.parent.show_questionnaires,
@@ -216,16 +194,7 @@ class DashboardWindow(ttk.Frame):
             )
 
     def create_footer(self) -> None:
-        """
-        Crée footer et synchronise l'affichage avec le résultat obtenu.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Construit les boutons « Changer d'utilisateur » et « Quitter l'application »."""
 
         footer_frame = ttk.Frame(self)
 

@@ -6,6 +6,14 @@
 
 Il reprend les mêmes méthodes que ``ApiClient`` afin que les fenêtres
 ne sachent pas si les données viennent du réseau ou de la mémoire.
+
+Ce mode local ne couvre que les questionnaires, les sessions et les
+participations : il n'a jamais implémenté les niveaux/élèves/équipes/cours
+(pas de list_niveaux, list_eleves, etc.). C'est suffisant pour tester
+rapidement l'écran sessions sans lancer le serveur, mais ce client ne peut
+pas remplacer l'API pour un test complet de l'application. Voir le rapport,
+section limites connues. Dans la version remise, USE_API vaut True dans
+config.py donc ce client n'est de toute façon pas utilisé.
 """
 
 from __future__ import annotations
@@ -15,57 +23,22 @@ from datetime import datetime
 
 
 class LocalClient:
-    """
-    Représente local client dans l'interface graphique QuizzenClasse.
-    
-    La classe rassemble les widgets de cet écran, les variables Tkinter associées
-    et les méthodes déclenchées par les actions de l'utilisateur.
-    """
+    """Version "hors ligne" très partielle d'ApiClient, pour dépanner sans serveur lancé."""
 
     def __init__(self) -> None:
-        """
-        Initialise l'objet et prépare les données ainsi que les widgets nécessaires à son fonctionnement.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
         self.token = "mode-local"
         self._questionnaire_id = 1
         self._session_id = 1
+        self._participation_id = 1
         self._questionnaires: list[dict] = []
         self._sessions: list[dict] = []
+        self._participations: list[dict] = []
 
     def login(self, _username: str, _password: str) -> None:
-        """
-        Vérifie les informations saisies, demande l'authentification de l'utilisateur et ouvre le tableau de bord en cas de réussite.
-        
-        Paramètres :
-            _username : donnée nécessaire au traitement de « username ».
-            _password : donnée nécessaire au traitement de « password ».
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        # Pas d'auth en local, on accepte tout le monde.
+        pass
 
     def get_profile(self) -> dict:
-        """
-        Récupère profile et synchronise l'affichage avec le résultat obtenu.
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
         return {
             "id": 0,
             "nom": "Enseignant de test",
@@ -75,49 +48,13 @@ class LocalClient:
 
     # Questionnaires -------------------------------------------------
     def list_questionnaires(self) -> list[dict]:
-        """
-        Récupère la liste de questionnaires et synchronise l'affichage avec le résultat obtenu.
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
         return [self._questionnaire_summary(item) for item in self._questionnaires]
 
     def get_questionnaire(self, questionnaire_id: int) -> dict | None:
-        """
-        Récupère questionnaire et synchronise l'affichage avec le résultat obtenu.
-        
-        Paramètres :
-            questionnaire_id : identifiant du questionnaire concerné.
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
         item = self._find(self._questionnaires, questionnaire_id)
         return deepcopy(item) if item else None
 
     def create_questionnaire(self, data: dict) -> dict:
-        """
-        Crée questionnaire et synchronise l'affichage avec le résultat obtenu.
-        
-        Paramètres :
-            data : donnée nécessaire au traitement de « data ».
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
         item = deepcopy(data)
         item["id"] = self._questionnaire_id
         self._questionnaire_id += 1
@@ -125,20 +62,6 @@ class LocalClient:
         return deepcopy(item)
 
     def update_questionnaire(self, questionnaire_id: int, data: dict) -> dict | None:
-        """
-        Met à jour questionnaire et synchronise l'affichage avec le résultat obtenu.
-        
-        Paramètres :
-            questionnaire_id : identifiant du questionnaire concerné.
-            data : donnée nécessaire au traitement de « data ».
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
         item = self._find(self._questionnaires, questionnaire_id)
         if item:
             item.update(deepcopy(data))
@@ -146,38 +69,12 @@ class LocalClient:
         return None
 
     def delete_questionnaire(self, questionnaire_id: int) -> None:
-        """
-        Supprime questionnaire et synchronise l'affichage avec le résultat obtenu.
-        
-        Paramètres :
-            questionnaire_id : identifiant du questionnaire concerné.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
         self._questionnaires = [
             item for item in self._questionnaires if item["id"] != questionnaire_id
         ]
 
     # Sessions -------------------------------------------------------
     def create_session(self, data: dict) -> dict:
-        """
-        Crée session et synchronise l'affichage avec le résultat obtenu.
-        
-        Paramètres :
-            data : donnée nécessaire au traitement de « data ».
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
         item = deepcopy(data)
         item.update({
             "id": self._session_id,
@@ -191,38 +88,12 @@ class LocalClient:
         return deepcopy(item)
 
     def list_sessions(self, questionnaire_id: int) -> list[dict]:
-        """
-        Récupère la liste de sessions et synchronise l'affichage avec le résultat obtenu.
-        
-        Paramètres :
-            questionnaire_id : identifiant du questionnaire concerné.
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
         return deepcopy([
             item for item in self._sessions
             if item["questionnaire_id"] == questionnaire_id
         ])
 
     def start_session(self, session_id: int) -> dict | None:
-        """
-        Démarre session et synchronise l'affichage avec le résultat obtenu.
-        
-        Paramètres :
-            session_id : identifiant de la session concernée.
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
         item = self._find(self._sessions, session_id)
         if item:
             item["statut"] = "en_cours"
@@ -231,19 +102,6 @@ class LocalClient:
         return None
 
     def close_session(self, session_id: int) -> dict | None:
-        """
-        Effectue le traitement correspondant à close session dans le contexte de cette fenêtre.
-        
-        Paramètres :
-            session_id : identifiant de la session concernée.
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
         item = self._find(self._sessions, session_id)
         if item:
             item["statut"] = "terminee"
@@ -252,37 +110,11 @@ class LocalClient:
         return None
 
     def get_share_code(self, session_id: int) -> dict:
-        """
-        Récupère share code et synchronise l'affichage avec le résultat obtenu.
-        
-        Paramètres :
-            session_id : identifiant de la session concernée.
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
         item = self._find(self._sessions, session_id)
         return {"code": item["code"] if item else "—"}
 
     def get_statistics(self, _session_id: int) -> dict:
-        """
-        Récupère statistics et synchronise l'affichage avec le résultat obtenu.
-        
-        Paramètres :
-            _session_id : donnée nécessaire au traitement de « session id ».
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
-
+        # Pas de vraie moyenne calculée en local, ça reste à 0.
         return {
             "nombre_participations": 0,
             "nombre_participations_evaluees": 0,
@@ -293,121 +125,46 @@ class LocalClient:
         }
 
     def get_report(self, session_id: int) -> dict:
-        """
-        Récupère report et synchronise l'affichage avec le résultat obtenu.
-        
-        Paramètres :
-            session_id : identifiant de la session concernée.
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
         return self.get_statistics(session_id)
 
     @staticmethod
     def _find(items: list[dict], item_id: int) -> dict | None:
-        """
-        Effectue le traitement correspondant à find dans le contexte de cette fenêtre.
-        
-        Paramètres :
-            items : donnée nécessaire au traitement de « items ».
-            item_id : donnée nécessaire au traitement de « item id ».
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
         return next((item for item in items if item["id"] == item_id), None)
 
     @staticmethod
     def _questionnaire_summary(item: dict) -> dict:
-        """
-        Effectue le traitement correspondant à questionnaire summary dans le contexte de cette fenêtre.
-        
-        Paramètres :
-            item : donnée nécessaire au traitement de « item ».
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
         summary = deepcopy(item)
         summary["nombre_questions"] = len(item.get("questions", []))
         return summary
 
     @staticmethod
     def _now() -> str:
-        """
-        Effectue le traitement correspondant à now dans le contexte de cette fenêtre.
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
         return datetime.now().strftime("%Y-%m-%d %H:%M")
 
-
-    # Participations
-
+    # Participations ---------------------------------------------------
+    # Stockées directement ici (comme les questionnaires et les sessions
+    # au-dessus), pas via un DataStore externe : plus simple à tester seul.
     def list_participations(self, session_id: int):
-        """
-        Récupère la liste de participations et synchronise l'affichage avec le résultat obtenu.
-        
-        Paramètres :
-            session_id : identifiant de la session concernée.
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
-        return self.data_store.list_participations(session_id)
+        return deepcopy([
+            item for item in self._participations
+            if item["session_id"] == session_id
+        ])
 
     def create_participation(self, session_id: int, data: dict):
-        """
-        Crée participation et synchronise l'affichage avec le résultat obtenu.
-        
-        Paramètres :
-            session_id : identifiant de la session concernée.
-            data : donnée nécessaire au traitement de « data ».
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
-        return self.data_store.create_participation(session_id, data)
+        item = deepcopy(data)
+        item.update({
+            "id": self._participation_id,
+            "session_id": session_id,
+            "score": None,
+            "commentaire_final": None,
+        })
+        self._participation_id += 1
+        self._participations.append(item)
+        return deepcopy(item)
 
     def evaluate_participation(self, participation_id: int, data: dict):
-        """
-        Effectue le traitement correspondant à evaluate participation dans le contexte de cette fenêtre.
-        
-        Paramètres :
-            participation_id : donnée nécessaire au traitement de « participation id ».
-            data : donnée nécessaire au traitement de « data ».
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
-        return self.data_store.evaluate_participation(participation_id, data)
+        item = self._find(self._participations, participation_id)
+        if item:
+            item.update(deepcopy(data))
+            return deepcopy(item)
+        return None

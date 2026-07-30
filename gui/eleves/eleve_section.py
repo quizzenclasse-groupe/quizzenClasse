@@ -2,7 +2,12 @@
 # Formation : L2 Informatique - IED, Université Paris 8
 # Rôle du fichier : Gestion graphique des élèves rattachés à un niveau.
 
-"""Section graphique chargée de la gestion des élèves via l'API."""
+"""Section graphique chargée de la gestion des élèves via l'API.
+
+Remarque : il n'existe volontairement pas de bouton « Supprimer » ici — la
+route ``DELETE`` pour un élève n'existe pas côté API (contrairement aux
+niveaux, qui en disposent d'une). Voir le rapport, section limites connues.
+"""
 
 from __future__ import annotations
 
@@ -17,27 +22,22 @@ from .widgets import create_labeled_entry
 
 
 class EleveSection(ttk.Frame):
+    """Formulaire et tableau de gestion des élèves d'un niveau donné.
+
+    Le niveau affiché est piloté de l'extérieur via ``set_current_niveau``
+    (appelé par ``ElevesWindow`` quand l'utilisateur change de niveau dans
+    ``NiveauSection``) ; cette section ne gère pas elle-même le choix du niveau.
     """
-    Représente eleve section dans l'interface graphique QuizzenClasse.
-    
-    La classe rassemble les widgets de cet écran, les variables Tkinter associées
-    et les méthodes déclenchées par les actions de l'utilisateur.
-    """
+
     def __init__(self, parent, api, on_niveau_changed: Callable[[int], None]) -> None:
-        """
-        Initialise l'objet et prépare les données ainsi que les widgets nécessaires à son fonctionnement.
-        
+        """Initialise l'état de la section et construit le formulaire puis le tableau.
+
         Paramètres :
-            parent : widget parent qui contient le composant.
-            api : client de communication utilisé par la fenêtre.
-            on_niveau_changed : donnée nécessaire au traitement de « on niveau changed ».
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
+            parent : widget parent qui contient cette section.
+            api : client HTTP utilisé pour tous les appels à l'API REST.
+            on_niveau_changed : fonction rappelée avec l'identifiant du
+                niveau après un ajout ou une modification d'élève, pour que
+                la fenêtre parente puisse rafraîchir l'effectif affiché.
         """
         super().__init__(parent, padding=10)
         self.api = api
@@ -59,16 +59,7 @@ class EleveSection(ttk.Frame):
         self._create_table()
 
     def _create_form(self) -> None:
-        """
-        Effectue le traitement correspondant à create form dans le contexte de cette fenêtre.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Construit le formulaire de saisie d'un élève (identité, date de naissance, ville, niveau)."""
         form = ttk.LabelFrame(self, text="Informations de l'élève", padding=10)
         form.pack(fill="x")
         create_labeled_entry(form, "Nom :", self.nom_eleve_var, 0)
@@ -90,16 +81,7 @@ class EleveSection(ttk.Frame):
         ttk.Button(buttons, text="Vider", command=self.clear_form).pack(side="left", padx=3)
 
     def _create_table(self) -> None:
-        """
-        Effectue le traitement correspondant à create table dans le contexte de cette fenêtre.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Construit le tableau listant les élèves du niveau actuellement sélectionné."""
         frame = ttk.LabelFrame(self, text="Élèves du niveau sélectionné", padding=5)
         frame.pack(fill="both", expand=True, pady=(15, 0))
         self.tree = ttk.Treeview(frame, columns=("nom", "prenom", "date", "ville", "cp", "redoublant"), show="headings", height=15)
@@ -117,24 +99,11 @@ class EleveSection(ttk.Frame):
         horizontal.grid(row=1, column=0, sticky="ew")
         frame.rowconfigure(0, weight=1)
         frame.columnconfigure(0, weight=1)
-        # Associe le traitement à un événement Tkinter ou à une exécution différée.
         self.tree.bind("<<TreeviewSelect>>", self._handle_selection)
 
     @staticmethod
     def _to_api_date(value: str):
-        """
-        Effectue le traitement correspondant à to api date dans le contexte de cette fenêtre.
-        
-        Paramètres :
-            value : donnée nécessaire au traitement de « value ».
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Convertit une date saisie au format ``JJ/MM/AAAA`` vers le format ISO attendu par l'API."""
         value = value.strip()
         if not value:
             return None
@@ -142,57 +111,36 @@ class EleveSection(ttk.Frame):
 
     @staticmethod
     def _to_display_date(value):
-        """
-        Effectue le traitement correspondant à to display date dans le contexte de cette fenêtre.
-        
-        Paramètres :
-            value : donnée nécessaire au traitement de « value ».
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Convertit une date ISO renvoyée par l'API vers le format d'affichage ``JJ/MM/AAAA``."""
         if not value:
             return ""
         return datetime.strptime(value, "%Y-%m-%d").strftime("%d/%m/%Y")
 
     def _validate_form(self):
+        """Valide tous les champs du formulaire et renvoie le payload prêt pour l'API, ou ``None`` si invalide.
+
+        Chaque erreur de validation affiche immédiatement un message
+        explicite à l'utilisateur (nom/prénom, date, ville, code postal,
+        niveau requis) avant d'interrompre la validation.
         """
-        Effectue le traitement correspondant à validate form dans le contexte de cette fenêtre.
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
         for variable, label in ((self.nom_eleve_var, "Nom"), (self.prenom_var, "Prénom")):
             valid, message = validate_person_name(variable.get(), label)
             if not valid:
                 messagebox.showerror("Données invalides", message)
                 return None
         valid, message = validate_date(self.date_naissance_var.get())
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
         if not valid:
             messagebox.showerror("Données invalides", message)
             return None
         valid, message = validate_required_text(self.ville_var.get(), "Ville")
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
         if not valid:
             messagebox.showerror("Données invalides", message)
             return None
         valid, message = validate_postal_code(self.cp_var.get())
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
         if not valid:
             messagebox.showerror("Données invalides", message)
             return None
         niveau_id = self.niveau_combobox_ids.get(self.niveau_var.get())
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
         if niveau_id is None:
             messagebox.showerror("Niveau obligatoire", "Sélectionnez un niveau pour l'élève.")
             return None
@@ -207,41 +155,25 @@ class EleveSection(ttk.Frame):
         }
 
     def add_eleve(self) -> None:
-        """
-        Ajoute eleve et synchronise l'affichage avec le résultat obtenu.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Valide le formulaire puis crée l'élève, en préservant le niveau sélectionné après coup."""
         data = self._validate_form()
         if data is None:
             return
-        # Exécute l'opération correspondante auprès du serveur puis récupère sa réponse.
         result = run_api_action(lambda: self.api.create_eleve(data))
         if result is None:
             return
         niveau_id = data["niveau_ids"][0]
         self.clear_form(preserve_niveau=True)
         self.on_niveau_changed_callback(niveau_id)
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
         messagebox.showinfo("Ajout réussi", "L'élève a été ajouté.")
 
     def update_eleve(self) -> None:
+        """Met à jour les informations de l'élève sélectionné.
+
+        Le changement de niveau n'est pas pris en charge : si le niveau
+        choisi dans le formulaire diffère de celui d'origine, la
+        modification est refusée pour éviter une incohérence côté API.
         """
-        Met à jour eleve et synchronise l'affichage avec le résultat obtenu.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
         if self.selected_eleve_id is None:
             messagebox.showwarning("Aucune sélection", "Sélectionnez un élève à modifier.")
             return
@@ -249,55 +181,28 @@ class EleveSection(ttk.Frame):
         if data is None:
             return
         niveau_id = data.pop("niveau_ids")[0]
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
         if self.selected_eleve_niveau_ids and niveau_id not in self.selected_eleve_niveau_ids:
             messagebox.showwarning(
                 "Changement de niveau non disponible",
                 "Les informations de l'élève peuvent être modifiées, mais son changement de niveau n'est pas disponible.",
             )
             return
-        # Exécute l'opération correspondante auprès du serveur puis récupère sa réponse.
         result = run_api_action(lambda: self.api.update_eleve(self.selected_eleve_id, data))
         if result is None:
             return
         self.clear_form(preserve_niveau=True)
         self.on_niveau_changed_callback(niveau_id)
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
         messagebox.showinfo("Modification réussie", "Les informations de l'élève ont été modifiées.")
 
     def set_current_niveau(self, niveau_id: Optional[int]) -> None:
-        """
-        Effectue le traitement correspondant à set current niveau dans le contexte de cette fenêtre.
-        
-        Paramètres :
-            niveau_id : identifiant du niveau concerné.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Change le niveau affiché : recharge le menu des niveaux, vide le formulaire, recharge les élèves."""
         self.current_niveau_id = niveau_id
         self.refresh_niveaux(niveau_id)
         self.clear_form(preserve_niveau=True)
         self.refresh_eleves()
 
     def refresh_niveaux(self, niveau_to_select: Optional[int] = None) -> None:
-        """
-        Actualise niveaux et synchronise l'affichage avec le résultat obtenu.
-        
-        Paramètres :
-            niveau_to_select : donnée nécessaire au traitement de « niveau to select ».
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Recharge la liste des niveaux disponibles dans le menu déroulant du formulaire."""
         niveaux = run_api_action(self.api.list_niveaux)
         if niveaux is None:
             return
@@ -309,27 +214,15 @@ class EleveSection(ttk.Frame):
             self._select_niveau_in_combobox(niveau_to_select)
 
     def refresh_eleves(self) -> None:
-        """
-        Actualise eleves et synchronise l'affichage avec le résultat obtenu.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
-        # Met à jour le contenu du tableau affiché dans l'interface.
+        """Recharge la liste des élèves du niveau courant et repeuple le tableau."""
         self.tree.delete(*self.tree.get_children())
         self.eleves_by_id = {}
         if self.current_niveau_id is None:
             return
-        # Exécute l'opération correspondante auprès du serveur puis récupère sa réponse.
         eleves = run_api_action(lambda: self.api.list_eleves(self.current_niveau_id))
         if eleves is None:
             return
         self.eleves_by_id = {item["id"]: item for item in eleves}
-        # Met à jour le contenu du tableau affiché dans l'interface.
         for eleve in eleves:
             self.tree.insert("", "end", iid=str(eleve["id"]), values=(
                 eleve.get("nom_eleve") or "", eleve.get("prenom") or "", self._to_display_date(eleve.get("date_naissance")),
@@ -337,19 +230,7 @@ class EleveSection(ttk.Frame):
             ))
 
     def _handle_selection(self, _event=None) -> None:
-        """
-        Effectue le traitement correspondant à handle selection dans le contexte de cette fenêtre.
-        
-        Paramètres :
-            _event : donnée nécessaire au traitement de « event ».
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Recopie les données de l'élève sélectionné dans le formulaire (pour modification)."""
         selection = self.tree.selection()
         if not selection:
             return
@@ -369,19 +250,7 @@ class EleveSection(ttk.Frame):
             self._select_niveau_in_combobox(niveau_ids[0])
 
     def _select_niveau_in_combobox(self, niveau_id: int) -> None:
-        """
-        Effectue le traitement correspondant à select niveau in combobox dans le contexte de cette fenêtre.
-        
-        Paramètres :
-            niveau_id : identifiant du niveau concerné.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Affiche dans le menu déroulant le libellé du niveau correspondant à ``niveau_id``."""
         for display_name, stored_id in self.niveau_combobox_ids.items():
             if stored_id == niveau_id:
                 self.niveau_var.set(display_name)
@@ -389,18 +258,12 @@ class EleveSection(ttk.Frame):
         self.niveau_var.set("")
 
     def clear_form(self, preserve_niveau: bool = False) -> None:
-        """
-        Efface form et synchronise l'affichage avec le résultat obtenu.
-        
+        """Vide les champs du formulaire de saisie d'un élève.
+
         Paramètres :
-            preserve_niveau : donnée nécessaire au traitement de « preserve niveau ».
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
+            preserve_niveau : si ``True``, laisse le niveau sélectionné dans
+                le menu déroulant (utilisé après un ajout, pour rester sur
+                le même niveau au lieu de forcer un nouveau choix).
         """
         self.selected_eleve_id = None
         self.selected_eleve_niveau_ids = []

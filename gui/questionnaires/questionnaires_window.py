@@ -2,7 +2,15 @@
 # Formation : L2 Informatique - IED, Université Paris 8
 # Rôle du fichier : Gestion des questionnaires, questions et propositions de réponse.
 
-"""Page complète de création, consultation et suppression des QCM."""
+"""Page complète de création, consultation et suppression des QCM.
+
+L'écran est coupé en 3 parties qui se partagent le travail :
+``QuestionForm`` (formulaire pour saisir une question + ses propositions),
+``QuestionsTable`` (tableau récapitulatif des questions déjà ajoutées),
+et cette classe ``QuestionnairesWindow`` qui les fait fonctionner
+ensemble et gère les métadonnées (titre, niveau, matière, difficulté)
+ainsi que la liste des questionnaires déjà enregistrés à droite.
+"""
 
 from __future__ import annotations
 
@@ -16,26 +24,20 @@ from .questions_table import QuestionsTable
 
 
 class QuestionnairesWindow(ttk.Frame):
-    """
-    Représente questionnaires window dans l'interface graphique QuizzenClasse.
-    
-    La classe rassemble les widgets de cet écran, les variables Tkinter associées
-    et les méthodes déclenchées par les actions de l'utilisateur.
+    """Écran de gestion des questionnaires : métadonnées, questions/propositions, et liste des QCM existants.
+
+    Deux modes de fonctionnement pour les questions : tant que le
+    questionnaire n'est pas encore enregistré (``selected_id is None``),
+    les questions sont gérées uniquement en mémoire locale ; une fois
+    enregistré, chaque ajout/suppression de question passe par l'API.
     """
 
     def __init__(self, parent) -> None:
-        """
-        Initialise l'objet et prépare les données ainsi que les widgets nécessaires à son fonctionnement.
-        
+        """Initialise l'état de l'écran, construit le contenu, puis charge la liste des questionnaires.
+
         Paramètres :
-            parent : widget parent qui contient le composant.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
+            parent : fenêtre principale de l'application (fournit
+                ``api_client`` et ``show_dashboard`` pour le bouton retour).
         """
         super().__init__(parent, padding=18)
         self.parent = parent
@@ -54,17 +56,11 @@ class QuestionnairesWindow(ttk.Frame):
         self.refresh_questionnaires()
 
     def _create_content(self) -> None:
-        # Toute la page est défilable. Les tableaux gardent également leurs
-        # propres barres de défilement pour les longues listes.
-        """
-        Effectue le traitement correspondant à create content dans le contexte de cette fenêtre.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
+        """Construit la page défilable : éditeur de questionnaire à gauche, liste des QCM à droite.
+
+        Toute la page est défilable (canvas + scrollbar globale) ; les
+        tableaux internes gardent en plus leurs propres barres de
+        défilement pour les longues listes de questions ou de questionnaires.
         """
         scroll_area = ttk.Frame(self)
         scroll_area.pack(fill="both", expand=True)
@@ -82,65 +78,22 @@ class QuestionnairesWindow(ttk.Frame):
         inner_window = canvas.create_window((0, 0), window=inner, anchor="nw")
 
         def update_scroll_region(_event=None) -> None:
-            """
-            Met à jour scroll region et synchronise l'affichage avec le résultat obtenu.
-            
-            Paramètres :
-                _event : donnée nécessaire au traitement de « event ».
-            
-            Retour :
-                Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-            
-            Traitement :
-                Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-                d'actualiser les widgets concernés ou de poursuivre la navigation.
-            """
+            """Recalcule la zone défilable d'après la taille réelle du contenu."""
             canvas.configure(scrollregion=canvas.bbox("all"))
 
         def fit_inner_width(event) -> None:
-            """
-            Effectue le traitement correspondant à fit inner width dans le contexte de cette fenêtre.
-            
-            Paramètres :
-                event : événement Tkinter à l’origine de l’appel.
-            
-            Retour :
-                Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-            
-            Traitement :
-                Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-                d'actualiser les widgets concernés ou de poursuivre la navigation.
-            """
+            """Aligne la largeur du cadre interne sur celle du canvas parent."""
             canvas.itemconfigure(inner_window, width=event.width)
 
         def on_mousewheel(event) -> None:
-            # Windows/macOS utilisent event.delta ; Linux utilise aussi
-            # Button-4 et Button-5, gérés ci-dessous.
-            """
-            Traite l’événement lié à mousewheel et synchronise l'affichage avec le résultat obtenu.
-            
-            Paramètres :
-                event : événement Tkinter à l’origine de l’appel.
-            
-            Retour :
-                Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-            
-            Traitement :
-                Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-                d'actualiser les widgets concernés ou de poursuivre la navigation.
-            """
+            """Fait défiler la page à la molette (Windows/macOS ; Linux via Button-4/5 ci-dessous)."""
             if event.delta:
                 canvas.yview_scroll(int(-event.delta / 120), "units")
 
-        # Associe le traitement à un événement Tkinter ou à une exécution différée.
         inner.bind("<Configure>", update_scroll_region)
-        # Associe le traitement à un événement Tkinter ou à une exécution différée.
         canvas.bind("<Configure>", fit_inner_width)
-        # Associe le traitement à un événement Tkinter ou à une exécution différée.
         canvas.bind_all("<MouseWheel>", on_mousewheel)
-        # Associe le traitement à un événement Tkinter ou à une exécution différée.
         canvas.bind_all("<Button-4>", lambda _e: canvas.yview_scroll(-1, "units"))
-        # Associe le traitement à un événement Tkinter ou à une exécution différée.
         canvas.bind_all("<Button-5>", lambda _e: canvas.yview_scroll(1, "units"))
 
         content = ttk.Frame(inner)
@@ -167,20 +120,9 @@ class QuestionnairesWindow(ttk.Frame):
         self.questions_table.pack(fill="both", expand=True, pady=(2, 0))
 
         self._create_questionnaire_list(listing)
+
     def _create_metadata_form(self, parent) -> None:
-        """
-        Effectue le traitement correspondant à create metadata form dans le contexte de cette fenêtre.
-        
-        Paramètres :
-            parent : widget parent qui contient le composant.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Construit le formulaire des métadonnées du questionnaire (titre, niveau, matière, difficulté)."""
         form = ttk.LabelFrame(parent, text="Informations générales", padding=10)
         form.pack(fill="x")
         fields = (
@@ -204,19 +146,7 @@ class QuestionnairesWindow(ttk.Frame):
         form.columnconfigure(1, weight=1)
 
     def _create_actions(self, parent) -> None:
-        """
-        Effectue le traitement correspondant à create actions dans le contexte de cette fenêtre.
-        
-        Paramètres :
-            parent : widget parent qui contient le composant.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Construit la barre de boutons Enregistrer / Nouveau / Supprimer de l'éditeur."""
         actions = ttk.Frame(parent)
         actions.pack(fill="x", pady=8)
         ttk.Button(actions, text="Enregistrer", command=self.save).pack(side="left", padx=3)
@@ -224,19 +154,7 @@ class QuestionnairesWindow(ttk.Frame):
         ttk.Button(actions, text="Supprimer", command=self.delete_selected).pack(side="left", padx=3)
 
     def _create_questionnaire_list(self, parent) -> None:
-        """
-        Effectue le traitement correspondant à create questionnaire list dans le contexte de cette fenêtre.
-        
-        Paramètres :
-            parent : widget parent qui contient le composant.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Construit le tableau listant les questionnaires existants de l'enseignant."""
         frame = ttk.LabelFrame(parent, text="Mes questionnaires", padding=8)
         frame.pack(fill="both", expand=True)
 
@@ -276,32 +194,24 @@ class QuestionnairesWindow(ttk.Frame):
         vertical_scrollbar.grid(row=0, column=1, sticky="ns")
         horizontal_scrollbar.grid(row=1, column=0, sticky="ew")
 
-        # Associe le traitement à un événement Tkinter ou à une exécution différée.
         self.list_tree.bind("<<TreeviewSelect>>", self.load_selected)
         ttk.Button(
             frame, text="Actualiser", command=self.refresh_questionnaires
         ).pack(pady=6)
 
     def add_question(self, question: dict) -> None:
-        """
-        Ajoute question et synchronise l'affichage avec le résultat obtenu.
-        
-        Paramètres :
-            question : donnée nécessaire au traitement de « question ».
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
+        """Ajoute une question au questionnaire en cours d'édition.
+
+        Avant le premier enregistrement, la question est simplement ajoutée
+        à la liste locale ``self.questions`` ; une fois le questionnaire
+        enregistré (``selected_id`` connu), l'ajout passe par l'API pour
+        recevoir en retour la question avec son identifiant définitif.
         """
         if self.selected_id is None:
             self.questions.append(question)
             self.questions_table.refresh(self.questions)
             return
 
-        # Exécute l'opération correspondante auprès du serveur puis récupère sa réponse.
         result = run_api_action(
             lambda: self.api.add_question(self.selected_id, question)
         )
@@ -310,39 +220,24 @@ class QuestionnairesWindow(ttk.Frame):
             self.questions_table.refresh(self.questions)
 
     def _has_sessions(self) -> bool | None:
-        """
-        Effectue le traitement correspondant à has sessions dans le contexte de cette fenêtre.
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
+        """Indique si le questionnaire sélectionné a déjà au moins une session créée.
+
+        Sert de garde-fou avant suppression : un questionnaire déjà utilisé
+        dans une session ne doit pas être supprimable depuis la GUI.
         """
         if self.selected_id is None:
             return False
-        # Exécute l'opération correspondante auprès du serveur puis récupère sa réponse.
         sessions = run_api_action(lambda: self.api.list_sessions(self.selected_id))
         if sessions is None:
             return None
         return bool(sessions)
 
     def add_proposition(self, index: int) -> None:
+        """Demande le texte d'une nouvelle proposition et l'ajoute à la question désignée par ``index``.
+
+        Nécessite que le questionnaire soit déjà enregistré (une question
+        sans identifiant API ne peut pas recevoir de proposition côté serveur).
         """
-        Ajoute proposition et synchronise l'affichage avec le résultat obtenu.
-        
-        Paramètres :
-            index : donnée nécessaire au traitement de « index ».
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
         if self.selected_id is None:
             messagebox.showinfo(
                 "Questionnaire non enregistré",
@@ -356,9 +251,7 @@ class QuestionnairesWindow(ttk.Frame):
         libelle = simpledialog.askstring("Nouvelle réponse", "Texte de la proposition :", parent=self)
         if not libelle or not libelle.strip():
             return
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
         est_correcte = messagebox.askyesno("Bonne réponse", "Cette proposition est-elle correcte ?", parent=self)
-        # Exécute l'opération correspondante auprès du serveur puis récupère sa réponse.
         result = run_api_action(
             lambda: self.api.add_proposition(
                 self.selected_id, question_id,
@@ -370,19 +263,7 @@ class QuestionnairesWindow(ttk.Frame):
             self.questions_table.refresh(self.questions)
 
     def delete_question(self, index: int) -> None:
-        """
-        Supprime question et synchronise l'affichage avec le résultat obtenu.
-        
-        Paramètres :
-            index : donnée nécessaire au traitement de « index ».
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Supprime la question à l'index donné, localement si le questionnaire n'est pas encore enregistré, sinon via l'API."""
         question = self.questions[index]
         if self.selected_id is None or "id" not in question:
             self.questions.pop(index)
@@ -394,7 +275,6 @@ class QuestionnairesWindow(ttk.Frame):
         # l'erreur réelle sera affichée par run_api_action.
         if not messagebox.askyesno("Confirmation", "Supprimer cette question du questionnaire ?"):
             return
-        # Exécute l'opération correspondante auprès du serveur puis récupère sa réponse.
         result = run_api_action(
             lambda: self.api.delete_question(self.selected_id, question["id"])
         )
@@ -403,18 +283,8 @@ class QuestionnairesWindow(ttk.Frame):
             self.questions_table.refresh(self.questions)
 
     def save(self) -> None:
-        """
-        Effectue le traitement correspondant à save dans le contexte de cette fenêtre.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Crée le questionnaire (avec ses questions) s'il n'est pas encore enregistré, sinon met à jour ses métadonnées."""
         title = self.titre_var.get().strip()
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
         if not title:
             messagebox.showwarning("Titre obligatoire", "Saisissez un titre.")
             return
@@ -426,7 +296,6 @@ class QuestionnairesWindow(ttk.Frame):
             "difficulte": self.difficulte_var.get() or None,
         }
 
-        # Exécute l'opération correspondante auprès du serveur puis récupère sa réponse.
         if self.selected_id is None:
             metadata["questions"] = self.questions
             result = run_api_action(lambda: self.api.create_questionnaire(metadata))
@@ -436,29 +305,17 @@ class QuestionnairesWindow(ttk.Frame):
                 lambda: self.api.update_questionnaire(self.selected_id, metadata)
             )
 
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
         if result is not None:
             messagebox.showinfo("Enregistrement", "Questionnaire enregistré.")
             self.clear()
             self.refresh_questionnaires()
 
     def refresh_questionnaires(self) -> None:
-        """
-        Actualise questionnaires et synchronise l'affichage avec le résultat obtenu.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Recharge la liste des questionnaires de l'enseignant et repeuple le tableau."""
         questionnaires = run_api_action(self.api.list_questionnaires)
         if questionnaires is None:
             return
-        # Met à jour le contenu du tableau affiché dans l'interface.
         self.list_tree.delete(*self.list_tree.get_children())
-        # Met à jour le contenu du tableau affiché dans l'interface.
         for item in questionnaires:
             self.list_tree.insert(
                 "",
@@ -473,23 +330,10 @@ class QuestionnairesWindow(ttk.Frame):
             )
 
     def load_selected(self, _event=None) -> None:
-        """
-        Charge selected et synchronise l'affichage avec le résultat obtenu.
-        
-        Paramètres :
-            _event : donnée nécessaire au traitement de « event ».
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Charge le questionnaire sélectionné dans le tableau (métadonnées et questions) pour édition."""
         selection = self.list_tree.selection()
         if not selection:
             return
-        # Exécute l'opération correspondante auprès du serveur puis récupère sa réponse.
         questionnaire = run_api_action(
             lambda: self.api.get_questionnaire(int(selection[0]))
         )
@@ -504,50 +348,28 @@ class QuestionnairesWindow(ttk.Frame):
         self.questions_table.refresh(self.questions)
 
     def delete_selected(self) -> None:
-        """
-        Supprime selected et synchronise l'affichage avec le résultat obtenu.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
+        """Supprime le questionnaire sélectionné, à condition qu'il n'ait encore aucune session."""
         if self.selected_id is None:
             messagebox.showwarning("Aucune sélection", "Sélectionnez un questionnaire.")
             return
         has_sessions = self._has_sessions()
         if has_sessions is None:
             return
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
         if has_sessions:
             messagebox.showwarning(
                 "Questionnaire déjà utilisé",
                 "Ce questionnaire possède déjà une ou plusieurs sessions et ne peut pas être supprimé depuis la GUI.",
             )
             return
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
         if not messagebox.askyesno("Confirmation", "Supprimer ce questionnaire non utilisé ?"):
             return
-        # Exécute l'opération correspondante auprès du serveur puis récupère sa réponse.
         result = run_api_action(lambda: self.api.delete_questionnaire(self.selected_id))
         if result:
             self.clear()
             self.refresh_questionnaires()
 
     def clear(self) -> None:
-        """
-        Effectue le traitement correspondant à clear dans le contexte de cette fenêtre.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Réinitialise le formulaire d'édition (nouveau questionnaire vierge)."""
         self.selected_id = None
         self.titre_var.set("")
         self.niveau_var.set("")

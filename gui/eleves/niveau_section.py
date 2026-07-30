@@ -16,27 +16,29 @@ from .widgets import create_labeled_entry
 
 
 class NiveauSection(ttk.Frame):
+    """Panneau de gauche de l'écran élèves : liste et formulaire des niveaux (classes) de l'enseignant.
+
+    Un niveau est rattaché à un établissement, choisi via un champ de
+    recherche à la volée (``_search_etablissements``) car la liste des
+    établissements vient d'une table nationale bien trop grande pour un
+    simple menu déroulant.
+
+    Cette section ne connaît pas ``EleveSection`` : elle ne fait que
+    notifier ``on_niveau_selected`` à chaque changement de niveau
+    sélectionné (clic dans le tableau, ajout, suppression). C'est
+    ``ElevesWindow`` qui relie les deux entre elles pour recharger la
+    liste des élèves du niveau correspondant.
     """
-    Représente niveau section dans l'interface graphique QuizzenClasse.
-    
-    La classe rassemble les widgets de cet écran, les variables Tkinter associées
-    et les méthodes déclenchées par les actions de l'utilisateur.
-    """
+
     def __init__(self, parent, api, on_niveau_selected: Callable[[Optional[int]], None]) -> None:
-        """
-        Initialise l'objet et prépare les données ainsi que les widgets nécessaires à son fonctionnement.
-        
+        """Initialise l'état de la section et construit le formulaire puis le tableau.
+
         Paramètres :
-            parent : widget parent qui contient le composant.
-            api : client de communication utilisé par la fenêtre.
-            on_niveau_selected : donnée nécessaire au traitement de « on niveau selected ».
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
+            parent : widget parent qui contient cette section.
+            api : client HTTP utilisé pour tous les appels à l'API REST.
+            on_niveau_selected : fonction rappelée avec l'identifiant du
+                niveau sélectionné (ou ``None`` s'il n'y en a plus), pour
+                synchroniser la liste des élèves affichée à côté.
         """
         super().__init__(parent, padding=10)
         self.api = api
@@ -54,16 +56,7 @@ class NiveauSection(ttk.Frame):
         self._create_table()
 
     def _create_form(self) -> None:
-        """
-        Effectue le traitement correspondant à create form dans le contexte de cette fenêtre.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Construit le formulaire : nom du niveau, recherche d'établissement, boutons CRUD."""
         form = ttk.LabelFrame(self, text="Informations du niveau", padding=10)
         form.pack(fill="x")
         create_labeled_entry(form, "Nom du niveau :", self.nom_niveau_var, 0)
@@ -75,9 +68,8 @@ class NiveauSection(ttk.Frame):
             width=42,
         )
         self.etablissement_combo.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
-        # Associe le traitement à un événement Tkinter ou à une exécution différée.
+        # Recherche différée (300 ms) à chaque frappe, pour éviter un appel API par caractère tapé.
         self.etablissement_combo.bind("<KeyRelease>", self._schedule_etablissement_search)
-        # Associe le traitement à un événement Tkinter ou à une exécution différée.
         self.etablissement_combo.bind("<<ComboboxSelected>>", self._select_etablissement)
         ttk.Label(form, text="Tapez au moins 2 caractères puis choisissez un établissement dans la liste proposée.").grid(
             row=2, column=0, columnspan=2, sticky="w", padx=5
@@ -90,16 +82,7 @@ class NiveauSection(ttk.Frame):
         ttk.Button(buttons, text="Vider", command=self.clear_form).pack(side="left", padx=3)
 
     def _create_table(self) -> None:
-        """
-        Effectue le traitement correspondant à create table dans le contexte de cette fenêtre.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Construit le tableau listant les niveaux déjà enregistrés (nom, effectif, établissement)."""
         frame = ttk.LabelFrame(self, text="Niveaux enregistrés", padding=5)
         frame.pack(fill="both", expand=True, pady=(15, 0))
         self.tree = ttk.Treeview(frame, columns=("nom", "effectif", "etablissement"), show="headings", height=15)
@@ -112,42 +95,27 @@ class NiveauSection(ttk.Frame):
         self.tree.configure(yscrollcommand=scrollbar.set)
         self.tree.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
-        # Associe le traitement à un événement Tkinter ou à une exécution différée.
         self.tree.bind("<<TreeviewSelect>>", self._handle_selection)
 
     def _schedule_etablissement_search(self, _event=None) -> None:
+        """Reporte la recherche d'établissement de 300 ms après chaque frappe (anti-rebond).
+
+        Annule la recherche précédemment planifiée si l'utilisateur continue
+        de taper, pour ne lancer qu'un seul appel API par pause de saisie.
         """
-        Effectue le traitement correspondant à schedule etablissement search dans le contexte de cette fenêtre.
-        
-        Paramètres :
-            _event : donnée nécessaire au traitement de « event ».
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
-        # Associe le traitement à un événement Tkinter ou à une exécution différée.
         if self._search_job is not None:
             try:
                 self.after_cancel(self._search_job)
             except tk.TclError:
                 pass
-        # Associe le traitement à un événement Tkinter ou à une exécution différée.
         self._search_job = self.after(300, self._search_etablissements)
 
     def _search_etablissements(self) -> None:
-        """
-        Effectue le traitement correspondant à search etablissements dans le contexte de cette fenêtre.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
+        """Recherche les établissements correspondant au texte saisi (à partir de 2 caractères).
+
+        Les résultats sont mis en cache dans ``etablissement_names_by_id``,
+        partagé avec le client API pour que d'autres écrans (participations,
+        sessions) réutilisent les noms déjà résolus sans nouvel appel.
         """
         self._search_job = None
         query = clean_text(self.etablissement_var.get())
@@ -156,7 +124,6 @@ class NiveauSection(ttk.Frame):
             self.etablissement_ids.clear()
             self.selected_etablissement_id = None
             return
-        # Exécute l'opération correspondante auprès du serveur puis récupère sa réponse.
         results = run_api_action(lambda: self.api.search_etablissements(query))
         if results is None:
             return
@@ -178,38 +145,16 @@ class NiveauSection(ttk.Frame):
             self.etablissement_combo.event_generate("<Down>")
 
     def _select_etablissement(self, _event=None) -> None:
-        """
-        Effectue le traitement correspondant à select etablissement dans le contexte de cette fenêtre.
-        
-        Paramètres :
-            _event : donnée nécessaire au traitement de « event ».
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Mémorise l'identifiant de l'établissement choisi dans la liste déroulante."""
         self.selected_etablissement_id = self.etablissement_ids.get(self.etablissement_var.get())
 
     def _find_etablissement(self, name: str):
+        """Recherche un établissement par son nom exact (repli sur le premier résultat approché).
+
+        Utilisé quand l'utilisateur valide le formulaire sans avoir cliqué
+        sur une suggestion de la liste déroulante.
         """
-        Effectue le traitement correspondant à find etablissement dans le contexte de cette fenêtre.
-        
-        Paramètres :
-            name : donnée nécessaire au traitement de « name ».
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
-        # Exécute l'opération correspondante auprès du serveur puis récupère sa réponse.
         results = run_api_action(lambda: self.api.search_etablissements(name))
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
         if not results:
             messagebox.showerror("Établissement introuvable", "Aucun établissement ne correspond à ce nom.")
             return None
@@ -218,28 +163,18 @@ class NiveauSection(ttk.Frame):
         return exact or results[0]
 
     def add_niveau(self) -> None:
-        """
-        Ajoute niveau et synchronise l'affichage avec le résultat obtenu.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Valide le formulaire puis crée un niveau, en résolvant l'établissement si besoin."""
         valid, message = validate_required_text(self.nom_niveau_var.get(), "Nom du niveau")
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
         if not valid:
             messagebox.showerror("Données invalides", message)
             return
         valid, message = validate_required_text(self.etablissement_var.get(), "Établissement")
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
         if not valid:
             messagebox.showerror("Données invalides", message)
             return
         etablissement_id = self.etablissement_ids.get(self.etablissement_var.get())
         if etablissement_id is None:
+            # L'utilisateur a tapé un nom sans cliquer sur une suggestion : on le résout ici.
             etablissement = self._find_etablissement(clean_text(self.etablissement_var.get()))
             if etablissement is None:
                 return
@@ -247,7 +182,6 @@ class NiveauSection(ttk.Frame):
             self.etablissement_names_by_id[etablissement_id] = etablissement["nom_etablissement"]
             if hasattr(self.api, "etablissement_names_by_id"):
                 self.api.etablissement_names_by_id[etablissement_id] = etablissement["nom_etablissement"]
-        # Exécute l'opération correspondante auprès du serveur puis récupère sa réponse.
         result = run_api_action(lambda: self.api.create_niveau({
             "nom_niveau": clean_text(self.nom_niveau_var.get()),
             "etablissement_id": etablissement_id,
@@ -256,58 +190,32 @@ class NiveauSection(ttk.Frame):
             return
         self.clear_form()
         self.refresh(result["id"])
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
         messagebox.showinfo("Ajout réussi", "Le niveau a été ajouté.")
 
     def update_niveau(self) -> None:
-        """
-        Met à jour niveau et synchronise l'affichage avec le résultat obtenu.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
+        """Renomme le niveau sélectionné (l'établissement associé n'est pas modifiable ici)."""
         if self.selected_niveau_id is None:
             messagebox.showwarning("Aucune sélection", "Sélectionnez un niveau à modifier.")
             return
         valid, message = validate_required_text(self.nom_niveau_var.get(), "Nom du niveau")
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
         if not valid:
             messagebox.showerror("Données invalides", message)
             return
-        # Exécute l'opération correspondante auprès du serveur puis récupère sa réponse.
         result = run_api_action(lambda: self.api.update_niveau(
             self.selected_niveau_id, {"nom_niveau": clean_text(self.nom_niveau_var.get())}
         ))
         if result is None:
             return
         self.refresh(self.selected_niveau_id)
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
         messagebox.showinfo("Modification réussie", "Le nom du niveau a été modifié.")
 
     def delete_niveau(self) -> None:
-        """
-        Supprime niveau et synchronise l'affichage avec le résultat obtenu.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
+        """Supprime le niveau sélectionné après confirmation de l'utilisateur."""
         if self.selected_niveau_id is None:
             messagebox.showwarning("Aucune sélection", "Sélectionnez un niveau à supprimer.")
             return
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
         if not messagebox.askyesno("Confirmer la suppression", "Voulez-vous supprimer ce niveau ?"):
             return
-        # Exécute l'opération correspondante auprès du serveur puis récupère sa réponse.
         run_api_action(lambda: self.api.delete_niveau(self.selected_niveau_id))
         self.selected_niveau_id = None
         self.clear_form()
@@ -315,26 +223,17 @@ class NiveauSection(ttk.Frame):
         self.on_niveau_selected_callback(None)
 
     def refresh(self, niveau_to_select: Optional[int] = None) -> None:
-        """
-        Recharge les données affichées afin de présenter l'état le plus récent de l'application.
-        
+        """Recharge la liste des niveaux depuis l'API et repeuple le tableau.
+
         Paramètres :
-            niveau_to_select : donnée nécessaire au traitement de « niveau to select ».
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
+            niveau_to_select : si fourni, sélectionne ce niveau après le
+                rechargement (utilisé après un ajout ou une modification).
         """
         niveaux = run_api_action(self.api.list_niveaux)
         if niveaux is None:
             return
         self.niveaux_by_id = {item["id"]: item for item in niveaux}
-        # Met à jour le contenu du tableau affiché dans l'interface.
         self.tree.delete(*self.tree.get_children())
-        # Met à jour le contenu du tableau affiché dans l'interface.
         for niveau in niveaux:
             etablissement_id = niveau["etablissement_id"]
             etablissement_display = self.etablissement_names_by_id.get(
@@ -350,19 +249,7 @@ class NiveauSection(ttk.Frame):
             self.on_niveau_selected_callback(None)
 
     def select_niveau(self, niveau_id: int) -> None:
-        """
-        Sélectionne niveau et synchronise l'affichage avec le résultat obtenu.
-        
-        Paramètres :
-            niveau_id : identifiant du niveau concerné.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Sélectionne et met en évidence un niveau donné dans le tableau, puis charge son formulaire."""
         item_id = str(niveau_id)
         if self.tree.exists(item_id):
             self.tree.selection_set(item_id)
@@ -371,37 +258,13 @@ class NiveauSection(ttk.Frame):
             self._load_selected_niveau(niveau_id)
 
     def _handle_selection(self, _event=None) -> None:
-        """
-        Effectue le traitement correspondant à handle selection dans le contexte de cette fenêtre.
-        
-        Paramètres :
-            _event : donnée nécessaire au traitement de « event ».
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Réagit à un clic sur une ligne du tableau en chargeant le niveau correspondant."""
         selection = self.tree.selection()
         if selection:
             self._load_selected_niveau(int(selection[0]))
 
     def _load_selected_niveau(self, niveau_id: int) -> None:
-        """
-        Effectue le traitement correspondant à load selected niveau dans le contexte de cette fenêtre.
-        
-        Paramètres :
-            niveau_id : identifiant du niveau concerné.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Recopie les données du niveau sélectionné dans le formulaire et notifie le callback parent."""
         niveau = self.niveaux_by_id.get(niveau_id)
         if niveau is None:
             return
@@ -415,16 +278,7 @@ class NiveauSection(ttk.Frame):
         self.on_niveau_selected_callback(niveau_id)
 
     def clear_form(self) -> None:
-        """
-        Efface form et synchronise l'affichage avec le résultat obtenu.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Vide les champs du formulaire de saisie d'un niveau."""
         self.nom_niveau_var.set("")
         self.etablissement_var.set("")
         self.selected_etablissement_id = None

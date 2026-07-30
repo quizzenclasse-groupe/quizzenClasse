@@ -2,7 +2,15 @@
 # Formation : L2 Informatique - IED, Université Paris 8
 # Rôle du fichier : Consultation des statistiques, commentaires et rapports de session.
 
-"""Consultation des statistiques et du détail des participations."""
+"""Consultation des statistiques et du détail des participations.
+
+Un seul écran de sélection (questionnaire → session) débouche sur trois
+façons de consulter le même résultat : les indicateurs affichés
+directement à l'écran, un rapport texte détaillé dans une fenêtre à part
+(``show_report``), un graphique en barres via Matplotlib (``show_chart``),
+et un export CSV à ouvrir dans un tableur (``export_csv``). Aucun calcul
+statistique n'est fait ici : tout vient déjà calculé de l'API.
+"""
 
 from __future__ import annotations
 
@@ -19,26 +27,21 @@ from gui.common.page import create_page_header
 
 
 class StatistiquesWindow(ttk.Frame):
-    """
-    Représente statistiques window dans l'interface graphique QuizzenClasse.
-    
-    La classe rassemble les widgets de cet écran, les variables Tkinter associées
-    et les méthodes déclenchées par les actions de l'utilisateur.
+    """Écran de consultation des statistiques d'une session : indicateurs globaux, détail par participant.
+
+    Propose en plus trois exports du même jeu de données : un rapport
+    textuel détaillé (``show_report``), un graphique en barres
+    (``show_chart``) et un export CSV (``export_csv``). Tous les calculs
+    (moyenne, taux de réussite, etc.) sont faits côté API ; cette fenêtre
+    se contente de les afficher.
     """
 
     def __init__(self, parent) -> None:
-        """
-        Initialise l'objet et prépare les données ainsi que les widgets nécessaires à son fonctionnement.
-        
+        """Initialise l'état de la fenêtre, construit les deux zones (sélection, résultats), puis charge les questionnaires.
+
         Paramètres :
-            parent : widget parent qui contient le composant.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
+            parent : fenêtre principale de l'application (fournit
+                ``api_client`` et ``show_dashboard`` pour le bouton retour).
         """
         super().__init__(parent, padding=18)
         self.parent = parent
@@ -69,16 +72,7 @@ class StatistiquesWindow(ttk.Frame):
         self.load_questionnaires()
 
     def _create_selection(self) -> None:
-        """
-        Effectue le traitement correspondant à create selection dans le contexte de cette fenêtre.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Construit le formulaire de sélection (questionnaire, session) et la barre d'actions (calcul, exports)."""
         frame = ttk.LabelFrame(self, text="Choix de la session", padding=10)
         frame.pack(fill="x")
 
@@ -87,7 +81,7 @@ class StatistiquesWindow(ttk.Frame):
             frame, textvariable=self.questionnaire_var, state="readonly"
         )
         self.questionnaire_combo.grid(row=0, column=1, sticky="ew", padx=5, pady=4)
-        # Associe le traitement à un événement Tkinter ou à une exécution différée.
+        # Changer de questionnaire recharge la liste de ses sessions.
         self.questionnaire_combo.bind("<<ComboboxSelected>>", self.load_sessions)
 
         ttk.Label(frame, text="Session :").grid(row=1, column=0, sticky="w")
@@ -105,16 +99,7 @@ class StatistiquesWindow(ttk.Frame):
         frame.columnconfigure(1, weight=1)
 
     def _create_result(self) -> None:
-        """
-        Effectue le traitement correspondant à create result dans le contexte de cette fenêtre.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Construit la zone de résultats : identité de la session, indicateurs globaux, tableau par participant."""
         result_frame = ttk.LabelFrame(self, text="Résultats", padding=12)
         result_frame.pack(fill="both", expand=True, pady=(12, 0))
 
@@ -175,16 +160,7 @@ class StatistiquesWindow(ttk.Frame):
         tree_container.columnconfigure(0, weight=1)
 
     def load_questionnaires(self) -> None:
-        """
-        Charge questionnaires et synchronise l'affichage avec le résultat obtenu.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Charge la liste des questionnaires de l'enseignant et sélectionne le premier par défaut."""
         items = run_api_action(self.api.list_questionnaires)
         if items is None:
             return
@@ -196,23 +172,10 @@ class StatistiquesWindow(ttk.Frame):
             self.load_sessions()
 
     def load_sessions(self, _event=None) -> None:
-        """
-        Charge sessions et synchronise l'affichage avec le résultat obtenu.
-        
-        Paramètres :
-            _event : donnée nécessaire au traitement de « event ».
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Recharge les sessions du questionnaire sélectionné et vide les résultats précédemment affichés."""
         questionnaire_id = self.questionnaire_ids.get(self.questionnaire_var.get())
         if questionnaire_id is None:
             return
-        # Exécute l'opération correspondante auprès du serveur puis récupère sa réponse.
         items = run_api_action(lambda: self.api.list_sessions(questionnaire_id))
         if items is None:
             return
@@ -226,16 +189,7 @@ class StatistiquesWindow(ttk.Frame):
         self._clear_results()
 
     def _clear_results(self) -> None:
-        """
-        Effectue le traitement correspondant à clear results dans le contexte de cette fenêtre.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Réinitialise l'affichage des résultats (indicateurs, identité de session, tableau)."""
         self.last_stats = None
         self.participations = []
         for value in self.values.values():
@@ -243,30 +197,23 @@ class StatistiquesWindow(ttk.Frame):
         self.questionnaire_info_var.set("Questionnaire : —")
         self.session_info_var.set("Session : —")
         self.session_meta_var.set("Mode / statut : —")
-        # Met à jour le contenu du tableau affiché dans l'interface.
         if hasattr(self, "tree"):
             self.tree.delete(*self.tree.get_children())
 
     def load_statistics(self) -> None:
-        """
-        Charge statistics et synchronise l'affichage avec le résultat obtenu.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
+        """Récupère les statistiques et les participations de la session sélectionnée, puis met à jour l'affichage.
+
+        Les indicateurs globaux (moyenne, min/max, taux de réussite) sont
+        entièrement calculés côté API ; cette méthode les recopie tels quels
+        dans les libellés, et délègue le remplissage du tableau détaillé à
+        ``_fill_participation_table``.
         """
         session_id = self.session_ids.get(self.session_var.get())
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
         if session_id is None:
             messagebox.showwarning("Aucune session", "Choisissez une session.")
             return
 
-        # Exécute l'opération correspondante auprès du serveur puis récupère sa réponse.
         stats = run_api_action(lambda: self.api.get_statistics(session_id))
-        # Exécute l'opération correspondante auprès du serveur puis récupère sa réponse.
         participations = run_api_action(lambda: self.api.list_participations(session_id))
         if stats is None or participations is None:
             return
@@ -295,24 +242,14 @@ class StatistiquesWindow(ttk.Frame):
         self._fill_participation_table(session.get("mode") or "individuel")
 
     def _fill_participation_table(self, session_mode: str) -> None:
+        """Repeuple le tableau détaillé à partir de ``self.participations``.
+
+        Conserve tous les noms et les répartit sur plusieurs lignes. La
+        hauteur du tableau est ensuite adaptée à l'équipe qui nécessite le
+        plus de place, pour qu'aucun nom ne soit tronqué à l'affichage.
         """
-        Effectue le traitement correspondant à fill participation table dans le contexte de cette fenêtre.
-        
-        Paramètres :
-            session_mode : donnée nécessaire au traitement de « session mode ».
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
-        # Met à jour le contenu du tableau affiché dans l'interface.
         self.tree.delete(*self.tree.get_children())
 
-        # Conserve tous les noms et les répartit sur plusieurs lignes. La hauteur
-        # du tableau est ensuite adaptée à l'équipe qui nécessite le plus de place.
         prepared_rows = []
         maximum_line_count = 1
         for item in self.participations:
@@ -362,25 +299,11 @@ class StatistiquesWindow(ttk.Frame):
         )
 
     def _participant_name(self, participant_id: int, session_mode: str) -> str:
-        """
-        Effectue le traitement correspondant à participant name dans le contexte de cette fenêtre.
-        
-        Paramètres :
-            participant_id : donnée nécessaire au traitement de « participant id ».
-            session_mode : donnée nécessaire au traitement de « session mode ».
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Résout le nom affichable d'un participant (élève ou équipe), avec mise en cache par (mode, id)."""
         cache_key = (session_mode, participant_id)
         if cache_key in self.participant_names:
             return self.participant_names[cache_key]
 
-        # Exécute l'opération correspondante auprès du serveur puis récupère sa réponse.
         if session_mode == "equipe":
             participant = run_api_action(lambda: self.api.get_equipe(participant_id))
             if isinstance(participant, dict):
@@ -401,19 +324,7 @@ class StatistiquesWindow(ttk.Frame):
 
     @staticmethod
     def _member_name(member: dict) -> str:
-        """
-        Effectue le traitement correspondant à member name dans le contexte de cette fenêtre.
-        
-        Paramètres :
-            member : donnée nécessaire au traitement de « member ».
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Construit le nom affichable d'un membre d'équipe à partir des données API (prénom + nom)."""
         return (
             f"{member.get('prenom') or ''} {member.get('nom_eleve') or ''}".strip()
             or f"Élève {member.get('id', '?')}"
@@ -421,20 +332,7 @@ class StatistiquesWindow(ttk.Frame):
 
     @staticmethod
     def _wrap_text(value, width: int) -> str:
-        """
-        Effectue le traitement correspondant à wrap text dans le contexte de cette fenêtre.
-        
-        Paramètres :
-            value : donnée nécessaire au traitement de « value ».
-            width : donnée nécessaire au traitement de « width ».
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Formate un commentaire pour le tableau : coupe le texte à ``width`` caractères par ligne, 4 lignes max."""
         text = "" if value is None else str(value).strip()
         if not text:
             return "—"
@@ -447,24 +345,19 @@ class StatistiquesWindow(ttk.Frame):
         return "\n".join(lines[:4])
 
     def show_report(self) -> None:
-        """
-        Affiche report et synchronise l'affichage avec le résultat obtenu.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
+        """Ouvre une fenêtre secondaire affichant le rapport textuel complet de la session.
+
+        Recalcule les statistiques si nécessaire, récupère la date de
+        génération depuis l'API, puis assemble le texte du rapport
+        (indicateurs globaux + détail de chaque participant) dans un widget
+        ``Text`` en lecture seule.
         """
         session_id = self.session_ids.get(self.session_var.get())
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
         if session_id is None:
             messagebox.showwarning("Aucune session", "Choisissez une session.")
             return
         if self.last_stats is None or not self.participations:
             self.load_statistics()
-        # Exécute l'opération correspondante auprès du serveur puis récupère sa réponse.
         report = run_api_action(lambda: self.api.get_report(session_id))
         if report is None or self.last_stats is None:
             return
@@ -503,16 +396,7 @@ class StatistiquesWindow(ttk.Frame):
         text.configure(state="disabled")
 
     def show_chart(self) -> None:
-        """
-        Affiche chart et synchronise l'affichage avec le résultat obtenu.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Ouvre une fenêtre secondaire affichant un graphique en barres (moyenne, min, max) avec Matplotlib."""
         if self.last_stats is None:
             self.load_statistics()
         if self.last_stats is None:
@@ -537,15 +421,11 @@ class StatistiquesWindow(ttk.Frame):
         canvas.get_tk_widget().pack(fill="both", expand=True, padx=10, pady=10)
 
     def export_csv(self) -> None:
-        """
-        Exporte csv et synchronise l'affichage avec le résultat obtenu.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
+        """Exporte les statistiques et le détail des participations de la session dans un fichier CSV.
+
+        Le fichier utilise le point-virgule comme séparateur et
+        l'encodage ``utf-8-sig`` (BOM), pour s'ouvrir correctement dans
+        Excel en français sans corrompre les accents.
         """
         if self.last_stats is None:
             self.load_statistics()
@@ -562,7 +442,6 @@ class StatistiquesWindow(ttk.Frame):
         if not path:
             return
 
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
         try:
             with open(path, "w", newline="", encoding="utf-8-sig") as file:
                 writer = csv.writer(file, delimiter=";")
@@ -594,22 +473,9 @@ class StatistiquesWindow(ttk.Frame):
         except OSError as error:
             messagebox.showerror("Export impossible", str(error))
             return
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
         messagebox.showinfo("Export terminé", "Le fichier CSV détaillé a été créé.")
 
     @staticmethod
     def _format_score(value) -> str:
-        """
-        Effectue le traitement correspondant à format score dans le contexte de cette fenêtre.
-        
-        Paramètres :
-            value : donnée nécessaire au traitement de « value ».
-        
-        Retour :
-            Données calculées ou récupérées par la méthode.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Formate un score en ``X.XX / 20``, ou ``—`` si la valeur est absente (participation non évaluée)."""
         return "—" if value is None else f"{float(value):.2f} / 20"

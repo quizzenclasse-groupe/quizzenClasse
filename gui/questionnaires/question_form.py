@@ -2,7 +2,13 @@
 # Formation : L2 Informatique - IED, Université Paris 8
 # Rôle du fichier : Formulaire de saisie d'une question et de ses réponses.
 
-"""Formulaire réutilisable pour construire une question QCM."""
+"""Formulaire réutilisable pour construire une question QCM.
+
+Utilisé uniquement par ``QuestionnairesWindow`` : une fois une question
+validée ici, elle est transmise telle quelle (voir ``on_add``) et affichée
+dans ``QuestionsTable``, à côté. Ce formulaire ne sait rien de l'API ni
+du reste du questionnaire.
+"""
 
 from __future__ import annotations
 
@@ -11,27 +17,20 @@ from tkinter import messagebox, ttk
 
 
 class QuestionForm(ttk.LabelFrame):
-    """
-    Représente question form dans l'interface graphique QuizzenClasse.
-    
-    La classe rassemble les widgets de cet écran, les variables Tkinter associées
-    et les méthodes déclenchées par les actions de l'utilisateur.
+    """Formulaire de saisie d'une question à choix multiples (énoncé + 4 propositions au plus).
+
+    Ne communique jamais directement avec l'API : à la validation, elle
+    transmet simplement la question construite à ``on_add``, fourni par
+    l'écran parent (``QuestionnairesWindow.add_question``).
     """
 
     def __init__(self, parent, on_add) -> None:
-        """
-        Initialise l'objet et prépare les données ainsi que les widgets nécessaires à son fonctionnement.
-        
+        """Construit les champs du formulaire.
+
         Paramètres :
-            parent : widget parent qui contient le composant.
-            on_add : donnée nécessaire au traitement de « on add ».
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
+            parent : widget parent qui contient ce formulaire.
+            on_add : fonction appelée avec le dictionnaire de la question
+                validée (énoncé, type, propositions) à chaque soumission réussie.
         """
         super().__init__(parent, text="Nouvelle question", padding=10)
         self.on_add = on_add
@@ -41,16 +40,7 @@ class QuestionForm(ttk.LabelFrame):
         self._create_widgets()
 
     def _create_widgets(self) -> None:
-        """
-        Effectue le traitement correspondant à create widgets dans le contexte de cette fenêtre.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Construit le champ énoncé, les 4 lignes de proposition et leur case « Correcte »."""
         ttk.Label(self, text="Énoncé :").grid(row=0, column=0, sticky="w", pady=4)
         ttk.Entry(self, textvariable=self.enonce_var).grid(
             row=0, column=1, columnspan=2, sticky="ew", pady=4
@@ -75,15 +65,10 @@ class QuestionForm(ttk.LabelFrame):
         self.columnconfigure(1, weight=1)
 
     def _submit(self) -> None:
-        """
-        Effectue le traitement correspondant à submit dans le contexte de cette fenêtre.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
+        """Valide le formulaire (énoncé non vide, au moins 2 propositions, au moins une correcte) puis appelle ``on_add``.
+
+        Les propositions laissées vides sont ignorées silencieusement,
+        seules celles avec un texte saisi sont transmises.
         """
         enonce = self.enonce_var.get().strip()
         propositions = []
@@ -96,18 +81,15 @@ class QuestionForm(ttk.LabelFrame):
                     "est_correcte": correct_var.get(),
                 })
 
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
         if not enonce:
             messagebox.showwarning("Question incomplète", "Saisissez un énoncé.")
             return
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
         if len(propositions) < 2:
             messagebox.showwarning(
                 "Question incomplète",
                 "Saisissez au moins deux propositions.",
             )
             return
-        # Informe l'utilisateur du résultat de l'opération ou d'une erreur de saisie.
         if not any(item["est_correcte"] for item in propositions):
             messagebox.showwarning(
                 "Bonne réponse absente",
@@ -123,16 +105,7 @@ class QuestionForm(ttk.LabelFrame):
         self.clear()
 
     def clear(self) -> None:
-        """
-        Effectue le traitement correspondant à clear dans le contexte de cette fenêtre.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Vide l'énoncé et les 4 propositions, décoche les cases « Correcte »."""
         self.enonce_var.set("")
         for text_var, correct_var in zip(self.proposition_vars, self.correct_vars):
             text_var.set("")

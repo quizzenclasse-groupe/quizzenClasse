@@ -18,24 +18,19 @@ def create_labeled_entry(
     *,
     width: int = 30,
 ) -> ttk.Entry:
-    """
-    Crée labeled entry et synchronise l'affichage avec le résultat obtenu.
-    
-    Paramètres :
-        parent : widget parent qui contient le composant.
-        label_text : donnée nécessaire au traitement de « label text ».
-        variable : donnée nécessaire au traitement de « variable ».
-        row : donnée nécessaire au traitement de « row ».
-        width : donnée nécessaire au traitement de « width ».
-    
-    Retour :
-        Données calculées ou récupérées par la méthode.
-    
-    Traitement :
-        Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-        d'actualiser les widgets concernés ou de poursuivre la navigation.
-    """
+    """Ajoute une ligne « libellé + champ de saisie » sur une grille ``grid()``, et renvoie le champ créé.
 
+    Paramètres :
+        parent : conteneur dans lequel la ligne est ajoutée (doit utiliser ``grid``).
+        label_text : texte du libellé affiché à gauche du champ.
+        variable : ``StringVar``/``IntVar`` liée au champ de saisie.
+        row : numéro de ligne de la grille où placer le libellé et le champ.
+        width : largeur du champ de saisie en caractères.
+
+    Retour :
+        Le widget ``ttk.Entry`` créé, si l'appelant a besoin d'y accéder
+        directement (focus, liaison d'événement, etc.).
+    """
     ttk.Label(
         parent,
         text=label_text,

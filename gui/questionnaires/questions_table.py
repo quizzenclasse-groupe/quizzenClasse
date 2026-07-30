@@ -2,33 +2,34 @@
 # Formation : L2 Informatique - IED, Université Paris 8
 # Rôle du fichier : Tableau d'affichage des questions préparées ou enregistrées.
 
-"""Tableau court chargé d'afficher les questions préparées."""
+"""Tableau court chargé d'afficher les questions préparées.
+
+Fait équipe avec ``QuestionForm`` (qui ajoute les questions) dans
+``QuestionnairesWindow`` : ce fichier ne fait qu'afficher et relayer les
+clics, toute la validation et les appels API restent dans la fenêtre parente.
+"""
 
 from tkinter import ttk
 
 
 class QuestionsTable(ttk.LabelFrame):
+    """Tableau récapitulatif des questions d'un questionnaire (énoncé, nombre de propositions, bonnes réponses).
+
+    Ne stocke aucune donnée elle-même : ``refresh`` reçoit la liste des
+    questions à afficher, et les actions (suppression, ajout de proposition)
+    sont déléguées à l'écran parent via les callbacks du constructeur.
     """
-    Représente questions table dans l'interface graphique QuizzenClasse.
-    
-    La classe rassemble les widgets de cet écran, les variables Tkinter associées
-    et les méthodes déclenchées par les actions de l'utilisateur.
-    """
+
     def __init__(self, parent, on_delete, on_add_proposition=None) -> None:
-        """
-        Initialise l'objet et prépare les données ainsi que les widgets nécessaires à son fonctionnement.
-        
+        """Construit le tableau et sa barre d'actions.
+
         Paramètres :
-            parent : widget parent qui contient le composant.
-            on_delete : donnée nécessaire au traitement de « on delete ».
-            on_add_proposition : donnée nécessaire au traitement de « on add proposition ».
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
+            parent : widget parent qui contient ce tableau.
+            on_delete : fonction appelée avec l'index de la ligne sélectionnée
+                lors d'une suppression.
+            on_add_proposition : fonction appelée avec l'index de la ligne
+                sélectionnée pour ajouter une proposition ; si ``None``, le
+                bouton correspondant n'est pas affiché.
         """
         super().__init__(parent, text="Questions préparées", padding=8)
         self.on_delete = on_delete
@@ -86,22 +87,13 @@ class QuestionsTable(ttk.LabelFrame):
             ).pack(side="left", padx=3)
 
     def refresh(self, questions: list[dict]) -> None:
+        """Repeuple le tableau à partir de la liste de questions fournie.
+
+        L'identifiant de ligne (``iid``) est l'index de la question dans la
+        liste : c'est cet index, et non un identifiant API, qui est transmis
+        aux callbacks ``on_delete``/``on_add_proposition``.
         """
-        Recharge les données affichées afin de présenter l'état le plus récent de l'application.
-        
-        Paramètres :
-            questions : donnée nécessaire au traitement de « questions ».
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
-        # Met à jour le contenu du tableau affiché dans l'interface.
         self.tree.delete(*self.tree.get_children())
-        # Met à jour le contenu du tableau affiché dans l'interface.
         for index, question in enumerate(questions):
             correctes = sum(p["est_correcte"] for p in question["propositions"])
             self.tree.insert(
@@ -112,31 +104,13 @@ class QuestionsTable(ttk.LabelFrame):
             )
 
     def _delete(self) -> None:
-        """
-        Effectue le traitement correspondant à delete dans le contexte de cette fenêtre.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Transmet à ``on_delete`` l'index de la question sélectionnée, si une ligne est sélectionnée."""
         selection = self.tree.selection()
         if selection:
             self.on_delete(int(selection[0]))
 
     def _add_proposition(self) -> None:
-        """
-        Effectue le traitement correspondant à add proposition dans le contexte de cette fenêtre.
-        
-        Retour :
-            Aucun. L'état de l'interface ou les données courantes sont directement mis à jour.
-        
-        Traitement :
-            Les contrôles de saisie et les erreurs attendues sont pris en compte avant
-            d'actualiser les widgets concernés ou de poursuivre la navigation.
-        """
+        """Transmet à ``on_add_proposition`` l'index de la question sélectionnée, si une ligne est sélectionnée."""
         selection = self.tree.selection()
         if selection and self.on_add_proposition is not None:
             self.on_add_proposition(int(selection[0]))
