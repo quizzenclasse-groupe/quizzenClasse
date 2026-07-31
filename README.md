@@ -362,3 +362,58 @@ Membres du groupe :
 Enseignant correcteur :
 
 * Philippe KISLIN-DUVAL.
+
+---
+
+## Interface graphique, API et frontend web (nouvelle version)
+
+En plus du programme console d'origine (python main.py), le projet propose
+désormais une interface graphique de bureau (Tkinter), une API REST
+(FastAPI) et un frontend web (React), qui communiquent tous les trois avec
+la même base de données.
+
+### Prérequis supplémentaires
+
+* Node.js 18 ou plus récent, pour le frontend (nécessite glibc >= 2.28 sous
+  Linux ; sur un système plus ancien, comme Ubuntu 18.04, préférer un test
+  sous Windows/macOS ou dans un conteneur Docker).
+
+### Configuration
+
+Copier .env.example en .env à la racine du projet, et adapter si besoin
+(seule la variable DATABASE_URL est obligatoire, les autres ont une
+valeur par défaut) :
+
+cp .env.example .env
+
+### Installation
+
+pip install -r requirements.txt
+
+### Peupler la base des établissements scolaires (une seule fois)
+
+python main.py seed-etabs
+
+### Lancement (3 terminaux séparés)
+
+Terminal 1 — l'API :
+
+uvicorn api.app:app --reload
+
+Terminal 2 — le frontend web (optionnel) :
+
+cd frontend
+npm install
+npm run dev
+
+Terminal 3 — l'interface graphique :
+
+python gui_main.py
+
+### Remarque pyenv
+
+Si le fichier .python-version référence un environnement pyenv qui
+n'existe pas sur votre machine (par exemple standalone-sqlalchemy), le
+remplacer par votre propre version installée, par exemple :
+
+echo "3.10.20" > .python-version

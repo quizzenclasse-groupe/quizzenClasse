@@ -12,7 +12,11 @@ Cette fenêtre donne accès aux différents modules de l'application :
     - consultation des statistiques.
 """
 
-from tkinter import ttk
+from tkinter import messagebox, ttk
+import webbrowser
+
+# Port par défaut du serveur de développement Vite (voir frontend/vite.config.js).
+FRONTEND_URL = "http://localhost:5173"
 
 
 class DashboardWindow(ttk.Frame):
@@ -62,6 +66,7 @@ class DashboardWindow(ttk.Frame):
 
         self.create_header()
         self.create_navigation_buttons()
+        self.create_web_tools()
         self.create_footer()
 
     def create_header(self) -> None:
@@ -193,13 +198,70 @@ class DashboardWindow(ttk.Frame):
                 ipady=6,
             )
 
+    def create_web_tools(self) -> None:
+        """Construit le bouton d'ouverture du frontend web (React, développé par Fatima).
+
+        Ce bouton ne fait qu'ouvrir un navigateur sur l'adresse du frontend :
+        il ne lance ni ne surveille le serveur de développement, qui doit
+        être démarré séparément (voir ``open_frontend``).
+        """
+
+        tools_frame = ttk.LabelFrame(
+            self,
+            text="Autres outils",
+            padding=10,
+        )
+
+        tools_frame.grid(
+            row=2,
+            column=0,
+            sticky="ew",
+            padx=50,
+            pady=(0, 10),
+        )
+
+        tools_frame.columnconfigure(
+            0,
+            weight=1,
+        )
+
+        ttk.Button(
+            tools_frame,
+            text="Ouvrir le frontend web (statistiques, vue élèves)",
+            command=self.open_frontend,
+        ).grid(
+            row=0,
+            column=0,
+            sticky="ew",
+            padx=10,
+            pady=4,
+            ipady=4,
+        )
+
+    def open_frontend(self) -> None:
+        """Ouvre le frontend web dans le navigateur par défaut.
+
+        Suppose que le serveur de développement du frontend est déjà
+        lancé séparément (``npm run dev`` depuis le dossier ``frontend/``) ;
+        cette méthode se contente d'ouvrir le navigateur, elle ne démarre
+        rien elle-même.
+        """
+
+        messagebox.showinfo(
+            "Frontend web",
+            "Assurez-vous d'avoir lancé le serveur du frontend "
+            "(commande « npm run dev » depuis le dossier frontend/) "
+            "avant de continuer.",
+        )
+        webbrowser.open(FRONTEND_URL)
+
     def create_footer(self) -> None:
         """Construit les boutons « Changer d'utilisateur » et « Quitter l'application »."""
 
         footer_frame = ttk.Frame(self)
 
         footer_frame.grid(
-            row=2,
+            row=3,
             column=0,
             pady=(15, 5),
         )
