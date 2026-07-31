@@ -1,5 +1,21 @@
 # database/models/models_participants.py
-
+# *******************************************************
+# Nom ......... : models_participants.py
+# Rôle ........ : Définit les modèles ORM relatifs aux
+#                 participants de QuizzenClasse : participants,
+#                 élèves, équipes, participations aux sessions
+#                 et bulletins de participation.
+# Auteur ...... : Dominique ERIN
+# Version ..... : V0.1 du 30/07/2026
+# Licence ..... : réalisé dans le cadre du cours de
+#                 Réalisation de programme
+#                 (2025/2026)
+# Compilation . : python -m py_compile \
+#                 database/models/models_participants.py
+# Usage ....... : Importer les modèles nécessaires, par exemple :
+#                 from database.models.models_participants \
+#                 import Eleve, Equipe, Participation
+# *******************************************************
 from __future__ import annotations
 
 from datetime import date

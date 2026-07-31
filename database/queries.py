@@ -1,4 +1,19 @@
 # database/queries.py
+# *******************************************************
+# Nom ......... : queries.py
+# Rôle ........ : Regroupe les requêtes SQLAlchemy utilisées
+#                 pour rechercher les utilisateurs et les
+#                 enseignants, lister les élèves par niveau
+#                 et calculer les effectifs scolaires.
+# Auteur ...... : Dominique ERIN
+# Version ..... : V0.1 du 30/07/2026
+# Licence ..... : réalisé dans le cadre du cours de
+#                 Réalisation de programme
+#                 (2025/2026)
+# Compilation . : python -m py_compile database/queries.py
+# Usage ....... : Module importé par l’application :
+#                 from database import queries
+# *******************************************************
 from __future__ import annotations
 from typing import Sequence, Optional, List, Tuple
 
@@ -9,7 +24,7 @@ from database.models.models_utilisateurs import Utilisateur, Enseignant
 from database.models.models_scolaire import Niveau
 from database.models.models_participants import Eleve
 
-# Table d'association Niveau<->Eleve (si tu es en M↔M)
+# Table d'association Niveau<->Eleve (M<->M)
 try:
     from database.tables_association import niveau_eleve
     HAS_M2M = True
@@ -51,7 +66,7 @@ def list_eleves_par_niveau(s: Session, niveau_id: int) -> Sequence[Eleve]:
             .where(niveau_eleve.c.niveau_id == niveau_id)
         )
     else:
-        # Fallback si tu as une FK directe Eleve.niveau_id
+        # Fallback : une FK directe Eleve.niveau_id
         stmt = select(Eleve).where(getattr(Eleve, "niveau_id") == niveau_id)
     return s.execute(stmt).scalars().all()
 
@@ -83,7 +98,7 @@ def effectifs_par_niveau(s: Session) -> List[Tuple[int, str, int]]:
 
 def effectifs_par_classe(s: Session) -> List[Tuple[int, str, int]]:
     """
-    Alias: dans ce projet, « classe » ≈ « niveau ».
+    « classe » = « niveau ».
     On renvoie les effectifs par niveau pour satisfaire les tests.
     """
     return effectifs_par_niveau(s)

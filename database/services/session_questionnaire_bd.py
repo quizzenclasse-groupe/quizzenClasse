@@ -1,3 +1,21 @@
+# database/services/session_questionnaire_bd.py
+# *******************************************************
+# Nom ......... : session_questionnaire_bd.py
+# Rôle ........ : Assure la persistance des sessions de
+#                 questionnaire, leur recherche par enseignant,
+#                 le chargement des participants associés et
+#                 l'enregistrement des rapports de session.
+# Auteur ...... : Dominique ERIN
+# Version ..... : V0.1 du 30/07/2026
+# Licence ..... : réalisé dans le cadre du cours de
+#                 Réalisation de programme
+#                 (2025/2026)
+# Compilation . : python -m py_compile \
+#                 database/services/session_questionnaire_bd.py
+# Usage ....... : Importer et instancier le service avec une
+#                 session SQLAlchemy :
+#                 SessionQuestionnaireBD(session_bd)
+# *******************************************************
 from __future__ import annotations
 
 from sqlalchemy import select

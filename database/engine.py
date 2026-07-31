@@ -1,3 +1,20 @@
+# database/engine.py
+# *******************************************************
+# Nom ......... : engine.py
+# Rôle ........ : Charge la configuration de connexion depuis
+#                 le fichier .env, crée le moteur SQLAlchemy
+#                 et configure la fabrique de sessions utilisée
+#                 pour accéder à la base de données.
+# Auteur ...... : Dominique ERIN
+# Version ..... : V0.1 du 30/07/2026
+# Licence ..... : réalisé dans le cadre du cours de
+#                 Réalisation de programme
+#                 (2025/2026)
+# Compilation . : python -m py_compile database/engine.py
+# Usage ....... : Définir DATABASE_URL dans le fichier .env,
+#                 puis importer :
+#                 from database.engine import engine, Session
+# *******************************************************
 import os
 from pathlib import Path
 from dotenv import load_dotenv

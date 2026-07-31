@@ -1,3 +1,21 @@
+# database/services/parcours_scolaire_bd.py
+# *******************************************************
+# Nom ......... : parcours_scolaire_bd.py
+# Rôle ........ : Centralise les opérations de lecture et
+#                 d'écriture relatives au parcours scolaire :
+#                 établissements rattachés aux enseignants,
+#                 niveaux scolaires et élèves.
+# Auteur ...... : Dominique ERIN
+# Version ..... : V0.1 du 30/07/2026
+# Licence ..... : réalisé dans le cadre du cours de
+#                 Réalisation de programme
+#                 (2025/2026)
+# Compilation . : python -m py_compile \
+#                 database/services/parcours_scolaire_bd.py
+# Usage ....... : Importer et instancier le service avec une
+#                 session SQLAlchemy :
+#                 ParcoursScolaireBD(session_bd)
+# *******************************************************
 from __future__ import annotations
 
 from collections.abc import Sequence

@@ -1,3 +1,21 @@
+# tests/contract/test_questionnaire_contract.py
+# *******************************************************
+# Nom ......... : test_questionnaire_contract.py
+# Rôle ........ : Vérifie le contrat fonctionnel d'un
+#                 questionnaire QCM, notamment le nombre de
+#                 questions, le nombre de propositions et
+#                 l'unicité de la bonne réponse.
+# Auteur ...... : Dominique ERIN
+# Version ..... : V0.1 du 30/07/2026
+# Licence ..... : réalisé dans le cadre du cours de
+#                 Réalisation de programme
+#                 (2025/2026)
+# Compilation . : python -m py_compile \
+#                 tests/contract/test_questionnaire_contract.py
+# Usage ....... : Pour exécuter ce fichier de tests :
+#                 python -m pytest \
+#                 tests/contract/test_questionnaire_contract.py -q
+# *******************************************************
 from __future__ import annotations
 
 import pytest

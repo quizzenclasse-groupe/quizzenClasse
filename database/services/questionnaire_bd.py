@@ -1,3 +1,21 @@
+# database/services/questionnaire_bd.py
+# *******************************************************
+# Nom ......... : questionnaire_bd.py
+# Rôle ........ : Assure la persistance des questionnaires et
+#                 permet leur chargement avec leurs questions,
+#                 propositions et auteurs, notamment selon
+#                 l'enseignant propriétaire.
+# Auteur ...... : Dominique ERIN
+# Version ..... : V0.1 du 30/07/2026
+# Licence ..... : réalisé dans le cadre du cours de
+#                 Réalisation de programme
+#                 (2025/2026)
+# Compilation . : python -m py_compile \
+#                 database/services/questionnaire_bd.py
+# Usage ....... : Importer et instancier le service avec une
+#                 session SQLAlchemy :
+#                 QuestionnaireBD(session)
+# *******************************************************
 from __future__ import annotations
 
 from sqlalchemy import select

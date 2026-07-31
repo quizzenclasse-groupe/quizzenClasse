@@ -1,3 +1,21 @@
+# tests/factories.py
+# *******************************************************
+# Nom ......... : factories.py
+# Rôle ........ : Regroupe les fabriques, jeux de données et
+#                 fonctions utilitaires employés par les tests
+#                 pour créer des établissements, niveaux,
+#                 élèves, équipes, questionnaires, sessions et
+#                 simulations de réponses.
+# Auteur ...... : Dominique ERIN
+# Version ..... : V0.1 du 30/07/2026
+# Licence ..... : réalisé dans le cadre du cours de
+#                 Réalisation de programme
+#                 (2025/2026)
+# Compilation . : python -m py_compile tests/factories.py
+# Usage ....... : Importer les fabriques dans les fichiers de
+#                 tests, par exemple :
+#                 from tests.factories import creer_eleves
+# ********************************************************
 from __future__ import annotations
 
 from dataclasses import dataclass

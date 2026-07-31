@@ -1,3 +1,21 @@
+# tests/integration/test_groupes_persistence.py
+# *******************************************************
+# Nom ......... : test_groupes_persistence.py
+# Rôle ........ : Vérifie la persistance des équipes d'élèves,
+#                 leur rechargement depuis la base de données
+#                 et la répartition correcte des élèves entre
+#                 les différentes équipes.
+# Auteur ...... : Dominique ERIN
+# Version ..... : V0.1 du 30/07/2026
+# Licence ..... : réalisé dans le cadre du cours de
+#                 Réalisation de programme
+#                 (2025/2026)
+# Compilation . : python -m py_compile \
+#                 tests/integration/test_groupes_persistence.py
+# Usage ....... : Pour exécuter ce fichier de tests :
+#                 python -m pytest \
+#                 tests/integration/test_groupes_persistence.py -q
+# *******************************************************
 from __future__ import annotations
 
 import pytest

@@ -1,4 +1,21 @@
 # database/features/management_quest.py
+# *******************************************************
+# Nom ......... : management_quest.py
+# Rôle ........ : Orchestre les cas d'usage liés aux
+#                 questionnaires, questions, propositions,
+#                 sessions, participants et rapports, vérifie
+#                 les droits des utilisateurs et délègue la
+#                 persistance aux services spécialisés.
+# Auteur ...... : Dominique ERIN
+# Version ..... : V0.1 du 30/07/2026
+# Licence ..... : réalisé dans le cadre du cours de
+#                 Réalisation de programme
+#                 (2025/2026)
+# Compilation . : python -m py_compile \
+#                 database/features/management_quest.py
+# Usage ....... : Importer puis instancier le contrôleur :
+#                 ManagementQuestionnaire()
+# *******************************************************
 from __future__ import annotations
 
 from datetime import date

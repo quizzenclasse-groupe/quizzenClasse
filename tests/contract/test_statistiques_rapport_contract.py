@@ -1,3 +1,20 @@
+# tests/contract/test_statistiques_rapport_contract.py
+# *******************************************************
+# Nom ......... : test_statistiques_rapport_contract.py
+# Rôle ........ : Vérifie le calcul des statistiques d'une
+#                 session et la génération d'un rapport à
+#                 partir d'un jeu déterministe de scores.
+# Auteur ...... : Dominique ERIN
+# Version ..... : V0.1 du 30/07/2026
+# Licence ..... : réalisé dans le cadre du cours de
+#                 Réalisation de programme
+#                 (2025/2026)
+# Compilation . : python -m py_compile \
+#                 tests/contract/test_statistiques_rapport_contract.py
+# Usage ....... : Pour exécuter ce fichier de tests :
+#                 python -m pytest \
+#                 tests/contract/test_statistiques_rapport_contract.py -q
+# *******************************************************
 from __future__ import annotations
 
 from statistics import mean

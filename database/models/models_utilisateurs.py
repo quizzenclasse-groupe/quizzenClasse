@@ -1,3 +1,21 @@
+# database/models/models_utilisateurs.py
+# *******************************************************
+# Nom ......... : models_utilisateurs.py
+# Rôle ........ : Définit les modèles ORM représentant les
+#                 utilisateurs, les enseignants et les
+#                 administrateurs ; assure le hachage et la
+#                 vérification sécurisée des mots de passe.
+# Auteur ...... : Dominique ERIN
+# Version ..... : V0.1 du 30/07/2026
+# Licence ..... : réalisé dans le cadre du cours de
+#                 Réalisation de programme
+#                 (2025/2026)
+# Compilation . : python -m py_compile \
+#                 database/models/models_utilisateurs.py
+# Usage ....... : Importer les modèles nécessaires, par exemple :
+#                 from database.models.models_utilisateurs \
+#                 import Utilisateur, Enseignant, Admin
+# *******************************************************
 from __future__ import annotations
 
 import base64

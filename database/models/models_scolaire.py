@@ -1,3 +1,21 @@
+# database/models/models_scolaire.py
+# *******************************************************
+# Nom ......... : models_scolaire.py
+# Rôle ........ : Définit les modèles ORM représentant les
+#                 établissements et les niveaux scolaires,
+#                 ainsi que les fonctions de chargement et de
+#                 recherche des établissements.
+# Auteur ...... : Dominique ERIN
+# Version ..... : V0.1 du 30/07/2026
+# Licence ..... : réalisé dans le cadre du cours de
+#                 Réalisation de programme
+#                 (2025/2026)
+# Compilation . : python -m py_compile \
+#                 database/models/models_scolaire.py
+# Usage ....... : Importer les modèles nécessaires, par exemple :
+#                 from database.models.models_scolaire \
+#                 import Etablissement, Niveau
+# *******************************************************
 from __future__ import annotations
 
 import csv

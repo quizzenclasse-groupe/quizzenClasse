@@ -1,4 +1,19 @@
 #database/base.py
+# *******************************************************
+# Nom ......... : base.py
+# Rôle ........ : Définit la classe de base déclarative commune
+#                 à tous les modèles ORM SQLAlchemy ainsi que
+#                 la convention de nommage des index, clés et
+#                 contraintes de la base de données.
+# Auteur ...... : Dominique ERIN
+# Version ..... : V0.1 du 30/07/2026
+# Licence ..... : réalisé dans le cadre du cours de
+#                 Réalisation de programme
+#                 (2025/2026)
+# Compilation . : python -m py_compile database/base.py
+# Usage ....... : Importer la classe de base avec :
+#                 from database.base import Model
+# *******************************************************
 from __future__ import annotations
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy import MetaData

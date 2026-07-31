@@ -1,3 +1,23 @@
+# database/services/etablissements_loader.py
+# *******************************************************
+# Nom ......... : etablissements_loader.py
+# Rôle ........ : Lit le fichier CSV de référence des
+#                 établissements scolaires, nettoie les
+#                 valeurs, détecte les doublons selon le code
+#                 UAI et prépare leur insertion ou mise à jour.
+# Auteur ...... : Dominique ERIN
+# Version ..... : V0.1 du 30/07/2026
+# Licence ..... : réalisé dans le cadre du cours de
+#                 Réalisation de programme
+#                 (2025/2026)
+# Compilation . : python -m py_compile \
+#                 database/services/etablissements_loader.py
+# Usage ....... : Importer la fonction de chargement :
+#                 load_etablissements_from_csv(
+#                     session,
+#                     chemin_csv,
+#                 )
+# *******************************************************
 from __future__ import annotations
 
 import csv

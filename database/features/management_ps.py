@@ -1,4 +1,21 @@
 # database/features/management_ps.py
+# *******************************************************
+# Nom ......... : management_ps.py
+# Rôle ........ : Orchestre les cas d'usage de l'environnement
+#                 scolaire : recherche et rattachement des
+#                 établissements, gestion des niveaux et des
+#                 élèves, création des équipes et consultation
+#                 des bulletins de participation.
+# Auteur ...... : Dominique ERIN
+# Version ..... : V0.1 du 30/07/2026
+# Licence ..... : réalisé dans le cadre du cours de
+#                 Réalisation de programme
+#                 (2025/2026)
+# Compilation . : python -m py_compile \
+#                 database/features/management_ps.py
+# Usage ....... : Importer puis instancier le contrôleur :
+#                 ManagementParcoursScolaire()
+# *******************************************************
 from __future__ import annotations
 
 from datetime import date

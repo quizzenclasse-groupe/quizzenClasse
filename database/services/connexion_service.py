@@ -1,5 +1,21 @@
 # database/services/connexion_service.py
-
+# *******************************************************
+# Nom ......... : connexion_service.py
+# Rôle ........ : Implémente les opérations d'authentification,
+#                 de déconnexion et d'inscription des
+#                 enseignants, tout en conservant l'utilisateur
+#                 actuellement connecté.
+# Auteur ...... : Dominique ERIN
+# Version ..... : V0.1 du 30/07/2026
+# Licence ..... : réalisé dans le cadre du cours de
+#                 Réalisation de programme
+#                 (2025/2026)
+# Compilation . : python -m py_compile \
+#                 database/services/connexion_service.py
+# Usage ....... : Importer et instancier le service avec une
+#                 session SQLAlchemy :
+#                 ConnexionService(session)
+# *******************************************************
 from __future__ import annotations
 
 from typing import Optional

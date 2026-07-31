@@ -1,3 +1,22 @@
+# tests/functional/test_scenario_enseignant_qcm.py
+# *******************************************************
+# Nom ......... : test_scenario_enseignant_qcm.py
+# Rôle ........ : Vérifie le scénario fonctionnel complet d'un
+#                 enseignant utilisant QuizzenClasse :
+#                 authentification, parcours scolaire, élèves,
+#                 équipes, questionnaire, sessions,
+#                 participations, évaluations et rapports.
+# Auteur ...... : Dominique ERIN
+# Version ..... : V0.1 du 30/07/2026
+# Licence ..... : réalisé dans le cadre du cours de
+#                 Réalisation de programme
+#                 (2025/2026)
+# Compilation . : python -m py_compile \
+#                 tests/functional/test_scenario_enseignant_qcm.py
+# Usage ....... : Pour exécuter ce scénario fonctionnel :
+#                 python -m pytest \
+#                 tests/functional/test_scenario_enseignant_qcm.py -q
+# *******************************************************
 from __future__ import annotations
 
 import pytest

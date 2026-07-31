@@ -1,5 +1,21 @@
 # database/tables_association.py
-
+# *******************************************************
+# Nom ......... : tables_association.py
+# Rôle ........ : Déclare les tables d’association SQLAlchemy
+#                 utilisées pour les relations plusieurs-à-
+#                 plusieurs entre les enseignants, les
+#                 établissements, les niveaux, les élèves,
+#                 les équipes, les options et les cours.
+# Auteur ...... : Dominique ERIN
+# Version ..... : V0.1 du 30/07/2026
+# Licence ..... : réalisé dans le cadre du cours de
+#                 Réalisation de programme
+#                 (2025/2026)
+# Compilation . : python -m py_compile \
+#                 database/tables_association.py
+# Usage ....... : Module chargé lors de l’import des modèles
+#                 SQLAlchemy de l’application.
+# *******************************************************
 from sqlalchemy import Column, ForeignKey, Integer, Table
 
 from database.base import Model

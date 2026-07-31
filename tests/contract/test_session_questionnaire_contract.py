@@ -1,3 +1,20 @@
+# tests/contract/test_session_questionnaire_contract.py
+# *******************************************************
+# Nom ......... : test_session_questionnaire_contract.py
+# Rôle ........ : Vérifie le contrat fonctionnel du cycle de
+#                 vie d'une session de questionnaire, depuis
+#                 son démarrage jusqu'à sa clôture.
+# Auteur ...... : Dominique ERIN
+# Version ..... : V0.1 du 30/07/2026
+# Licence ..... : réalisé dans le cadre du cours de
+#                 Réalisation de programme
+#                 (2025/2026)
+# Compilation . : python -m py_compile \
+#                 tests/contract/test_session_questionnaire_contract.py
+# Usage ....... : Pour exécuter ce fichier de tests :
+#                 python -m pytest \
+#                 tests/contract/test_session_questionnaire_contract.py -q
+# *******************************************************
 from __future__ import annotations
 
 import pytest

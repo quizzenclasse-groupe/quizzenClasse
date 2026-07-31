@@ -1,4 +1,22 @@
 # database/models/models_evaluation.py
+# *******************************************************
+# Nom ......... : models_evaluation.py
+# Rôle ........ : Définit les modèles ORM liés aux cours,
+#                 options, questionnaires, questions,
+#                 propositions, sessions de questionnaire,
+#                 rapports, notes, observations et graphiques ;
+#                 calcule également les statistiques de session.
+# Auteur ...... : Dominique ERIN
+# Version ..... : V0.1 du 30/07/2026
+# Licence ..... : réalisé dans le cadre du cours de
+#                 Réalisation de programme
+#                 (2025/2026)
+# Compilation . : python -m py_compile \
+#                 database/models/models_evaluation.py
+# Usage ....... : Importer les modèles nécessaires, par exemple :
+#                 from database.models.models_evaluation \
+#                 import Questionnaire, SessionQuestionnaire
+# *******************************************************
 from __future__ import annotations
 
 from dataclasses import dataclass

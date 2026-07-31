@@ -1,3 +1,20 @@
+# tests/integration/test_parcours_scolaire.py
+# *******************************************************
+# Nom ......... : test_parcours_scolaire.py
+# Rôle ........ : Vérifie la création et la persistance des
+#                 établissements, niveaux et élèves ainsi que
+#                 leurs relations dans le parcours scolaire.
+# Auteur ...... : Dominique ERIN
+# Version ..... : V0.1 du 30/07/2026
+# Licence ..... : réalisé dans le cadre du cours de
+#                 Réalisation de programme
+#                 (2025/2026)
+# Compilation . : python -m py_compile \
+#                 tests/integration/test_parcours_scolaire.py
+# Usage ....... : Pour exécuter ce fichier de tests :
+#                 python -m pytest \
+#                 tests/integration/test_parcours_scolaire.py -q
+# *******************************************************
 from __future__ import annotations
 
 import pytest

@@ -1,3 +1,22 @@
+# tests/integration/test_connexion_service.py
+# *******************************************************
+# Nom ......... : test_connexion_service.py
+# Rôle ........ : Vérifie les fonctions d'inscription et de
+#                 connexion du service d'authentification,
+#                 notamment le hachage du mot de passe, le
+#                 refus d'identifiants incorrects et la
+#                 détection des noms déjà utilisés.
+# Auteur ...... : Dominique ERIN
+# Version ..... : V0.1 du 30/07/2026
+# Licence ..... : réalisé dans le cadre du cours de
+#                 Réalisation de programme
+#                 (2025/2026)
+# Compilation . : python -m py_compile \
+#                 tests/integration/test_connexion_service.py
+# Usage ....... : Pour exécuter ce fichier de tests :
+#                 python -m pytest \
+#                 tests/integration/test_connexion_service.py -q
+# *******************************************************
 from __future__ import annotations
 
 import pytest

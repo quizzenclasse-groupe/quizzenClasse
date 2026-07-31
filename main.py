@@ -1,4 +1,22 @@
 # main.py
+# *******************************************************
+# Nom ......... : main.py
+# Rôle ........ : Point d’entrée de l’application QuizzenClasse ;
+#                 initialise la base de données et fournit les
+#                 menus interactifs de gestion des enseignants,
+#                 élèves, équipes, questionnaires, sessions,
+#                 évaluations et rapports.
+# Auteur ...... : Dominique ERIN
+# Version ..... : V0.1 du 30/07/2026
+# Licence ..... : réalisé dans le cadre du cours de
+#                 Réalisation de programme
+#                 (2025/2026)
+# Compilation . : python -m py_compile main.py
+# Usage ....... : Pour exécuter l’application :
+#                 python main.py
+#                 Pour importer les établissements :
+#                 python main.py seed-etabs
+# *******************************************************
 from __future__ import annotations
 
 import argparse
