@@ -351,7 +351,7 @@ Les mots de passe, jetons d’accès et autres informations sensibles ne doivent
 
 ## Auteurs
 
-Projet réalisé dans le cadre de la Licence 3 Informatique.
+Projet réalisé dans le cadre de la Licence 2 Informatique.
 
 Membres du groupe :
 
