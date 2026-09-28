@@ -1,43 +1,49 @@
 # QuizzenClasse
 
-## Présentation
+## Presentation
 
-**QuizzenClasse** est une application Python en ligne de commande destinée à la gestion de questionnaires pédagogiques.
+**QuizzenClasse** is an educational questionnaire management application developed as part of the second year of a Computer Science degree.
 
-L’application permet notamment :
+The project was developed in several versions using the same application core:
 
-* la création et l’authentification d’un compte enseignant ;
-* le rattachement d’un enseignant à un établissement ;
-* la gestion des niveaux scolaires ;
-* la création et l’affectation des élèves ;
-* la constitution d’équipes ;
-* la création de questionnaires à choix multiples ;
-* la création et le suivi de sessions de questionnaire ;
-* l’évaluation des participants ;
-* le calcul des statistiques ;
-* la génération de rapports de session.
+- a **command-line version**, developed by **Dominique ERIN**;
+- a **graphical interface version**, developed by **Rokhaya-fall MEMMA**;
+- a **version based on a REST API**, developed by **Fatima CHOKRI**, which can be used with the web frontend included in the project.
 
-Le projet utilise **Python**, **SQLAlchemy 2**, **SQLite** et **pytest**.
+The application can notably:
+
+- create and authenticate a teacher account;
+- link a teacher to a school;
+- manage school levels;
+- create and assign students;
+- create teams;
+- create multiple-choice questionnaires;
+- create and manage questionnaire sessions;
+- evaluate participants;
+- calculate statistics;
+- generate session reports.
+
+The core of the project mainly uses **Python**, **SQLAlchemy 2**, **SQLite** and **pytest**.
 
 ---
 
-## Prérequis
+## Requirements
 
-Le projet nécessite :
+The project requires:
 
-* Python 3.11 ou une version compatible ;
-* `pyenv` ;
-* `pyenv-virtualenv` ;
-* Git ;
-* les dépendances Python du projet.
+- Python 3.11 or a compatible version;
+- Git;
+- the Python dependencies listed in `requirements.txt`.
 
-Vérifier la version de Python :
+The project was developed with `pyenv` and `pyenv-virtualenv`, but using them is not mandatory.
+
+Check the Python version:
 
 ```bash
 python --version
 ```
 
-Vérifier l’installation de Git :
+Check the Git installation:
 
 ```bash
 git --version
@@ -45,81 +51,77 @@ git --version
 
 ---
 
-## Récupération du projet
+## Getting the project
 
-Cloner le dépôt GitHub :
+Clone the GitHub repository:
 
 ```bash
-git clone URL_DU_DEPOT_GITHUB
+git clone https://github.com/quizzenclasse-groupe/quizzenClasse.git
 ```
 
-Se placer dans le répertoire du projet :
+Move into the project directory:
 
 ```bash
 cd quizzenClasse
 ```
 
-Remplacer `URL_DU_DEPOT_GITHUB` par l’adresse réelle du dépôt privé.
-
-L’accès au dépôt nécessite d’avoir préalablement accepté l’invitation envoyée par l’administrateur du projet.
-
 ---
 
-## Activation de l’environnement virtuel
+## Activating the virtual environment
 
-L’environnement virtuel utilisé pour le projet est :
+The virtual environment used during backend development was:
 
 ```text
 standalone-sqlalchemy
 ```
 
-L’activer avec :
+It can be activated with:
 
 ```bash
 pyenv activate standalone-sqlalchemy
 ```
 
-Vérifier l’environnement utilisé :
+Check the active environment:
 
 ```bash
 pyenv version
 ```
 
-La sortie doit contenir :
+The output should contain:
 
 ```text
 standalone-sqlalchemy
 ```
 
-Vérifier l’interpréteur Python réellement utilisé :
+Check the Python interpreter actually being used:
 
 ```bash
 python -c "import sys; print(sys.executable)"
 ```
 
-Le chemin attendu est similaire à :
+The path may look similar to:
 
 ```text
-/home/UTILISATEUR/.pyenv/versions/standalone-sqlalchemy/bin/python
+/home/USER/.pyenv/versions/standalone-sqlalchemy/bin/python
 ```
 
 ---
 
-## Installation des dépendances
+## Installing dependencies
 
-Lorsque le fichier `requirements.txt` est présent, installer les dépendances avec :
+Install the Python dependencies with:
 
 ```bash
 python -m pip install -r requirements.txt
 ```
 
-Vérifier l’installation de SQLAlchemy :
+Check the SQLAlchemy installation:
 
 ```bash
 python -c "import sqlalchemy; print(sqlalchemy.__version__)"
 ```
 
-Vérifier l’installation de pytest :
+Check the pytest installation:
 
 ```bash
 python -m pytest --version
@@ -127,86 +129,94 @@ python -m pytest --version
 
 ---
 
-## Initialisation de la base de données
+## Initializing the database
 
-L’application utilise une base SQLite.
+The application uses a SQLite database.
 
-Les tables absentes sont créées automatiquement au lancement du programme.
+Missing tables are created automatically when the program starts.
 
-L’import des établissements peut être exécuté avec :
+The school data can be imported with:
 
 ```bash
 python main.py seed-etabs
 ```
 
-Le fichier utilisé par défaut est :
+The default file used is:
 
 ```text
 data/raw/education/fr-en-annuaire-education.csv
 ```
 
-Lorsque les établissements sont déjà présents dans la base, la commande peut afficher :
+When the schools are already present in the database, the command may display:
 
 ```text
 OK : 0 établissement(s) importé(s)
 ```
 
-Ce résultat signifie qu’aucun nouvel établissement n’a été ajouté.
+This result means that no new school was added.
 
 ---
 
-## Lancement des tests
+## Running the tests
 
-Avant toute modification importante ou tout envoi sur GitHub, exécuter l’ensemble des tests :
+Before any important modification or any push to GitHub, run all the tests:
 
 ```bash
 python -m pytest -v
 ```
 
-La suite comprend :
+The test suite includes:
 
-* les tests unitaires ;
-* les tests d’intégration ;
-* les tests de contrat ;
-* le test fonctionnel complet.
+- unit tests;
+- integration tests;
+- contract tests;
+- the complete functional test.
 
-### Lancer uniquement les tests unitaires
+### Run only the unit tests
 
 ```bash
 python -m pytest tests/unit -v
 ```
 
-### Lancer uniquement les tests d’intégration
+### Run only the integration tests
 
 ```bash
 python -m pytest tests/integration -v
 ```
 
-### Lancer uniquement les tests de contrat
+### Run only the contract tests
 
 ```bash
 python -m pytest tests/contract -v
 ```
 
-### Lancer uniquement le scénario fonctionnel
+### Run only the functional scenario
 
 ```bash
 python -m pytest tests/functional -v
 ```
 
-Le développement ne doit être envoyé sur le dépôt distant qu’après vérification des résultats obtenus.
+Changes should only be pushed to the remote repository after checking the test results.
 
 ---
 
-## Lancement de l’application
+# Running the different versions
 
-Lancer le programme principal avec :
+QuizzenClasse can be used in several ways depending on the interface required.
+
+## 1. Command-line version
+
+The **command-line version was developed by Dominique ERIN**.
+
+It gives direct access to the backend features from the terminal.
+
+Run it with:
 
 ```bash
 python main.py
 ```
 
-Le menu principal permet :
+The main menu includes:
 
 ```text
 1. Se connecter
@@ -216,204 +226,193 @@ Le menu principal permet :
 0. Quitter
 ```
 
-Après authentification, l’enseignant accède aux fonctions de gestion du parcours scolaire, des élèves, des questionnaires, des sessions et des rapports.
+After authentication, the teacher can access the features used to manage the school context, students, questionnaires, sessions, participations and reports.
 
----
-
-## Lancer les tests puis le programme
-
-Pour lancer l’application uniquement lorsque tous les tests sont validés :
+To run all tests first and start the application only if they pass:
 
 ```bash
 python -m pytest -v && python main.py
 ```
 
-L’opérateur `&&` exécute le programme uniquement lorsque la commande de test se termine sans erreur.
+The `&&` operator starts the program only if the previous command finishes without an error.
 
 ---
 
-## Organisation des tests
+## 2. Graphical interface version
 
-```text
-tests/
-├── unit/
-│   ├── test_equipe.py
-│   ├── test_participation.py
-│   └── test_simulation_reponses.py
-│
-├── integration/
-│   ├── test_connexion_service.py
-│   ├── test_groupes_persistence.py
-│   └── test_parcours_scolaire.py
-│
-├── contract/
-│   ├── test_questionnaire_contract.py
-│   ├── test_session_questionnaire_contract.py
-│   └── test_statistiques_rapport_contract.py
-│
-└── functional/
-    └── test_scenario_enseignant_qcm.py
+The **graphical interface version was developed by Rokhaya-fall MEMMA**.
+
+It allows users to access QuizzenClasse features through a graphical interface instead of directly from the terminal.
+
+Run it with:
+
+```bash
+python gui_main.py
 ```
 
+This interface uses the application core and the project data while providing graphical interaction for the user.
+
 ---
 
-## Organisation générale du projet
+## 3. Version using the API
 
-```text
-quizzenClasse/
-├── data/
-│
-├── database/
-│   ├── models/
-│   ├── services/
-│   ├── base.py
-│   ├── engine.py
-│   └── tables_association.py
-│
-├── tests/
-│   ├── unit/
-│   ├── integration/
-│   ├── contract/
-│   └── functional/
-│
-├── .gitignore
-├── main.py
-├── pytest.ini
-├── README.md
-└── requirements.txt
+The **REST API was developed by Fatima CHOKRI**.
+
+This version gives access to QuizzenClasse features through a FastAPI API. A web frontend is also included in the project and communicates with this API.
+
+### Configuration
+
+Copy the example file:
+
+```bash
+cp .env.example .env
 ```
 
+Then change the environment variables when necessary.
+
+### Installation
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+### Populate the school database
+
+This operation is only required once:
+
+```bash
+python main.py seed-etabs
+```
+
+### Run the API
+
+In a first terminal:
+
+```bash
+uvicorn api.app:app --reload
+```
+
+### Run the web frontend
+
+In a second terminal:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The frontend uses the FastAPI API to communicate with the backend features.
+
+Node.js 18 or a more recent version is required for this part of the project.
+
 ---
 
-## Règles de contribution
+## Contribution rules
 
-Avant de commencer une modification :
+Before starting a modification:
 
 ```bash
 git switch develop
 ```
 
-Mettre à jour la branche locale :
+Update the local branch:
 
 ```bash
 git pull --ff-only origin develop
 ```
 
-Créer une branche dédiée :
+Create a dedicated branch:
 
 ```bash
-git switch -c feature/nom-fonctionnalite
+git switch -c feature/feature-name
 ```
 
-Après le développement, exécuter les tests :
+After development, run the tests:
 
 ```bash
 python -m pytest -v
 ```
 
-Ajouter les fichiers concernés :
+Add the related files:
 
 ```bash
-git add CHEMIN_DU_FICHIER
+git add FILE_PATH
 ```
 
-Créer un commit :
+Create a commit:
 
 ```bash
-git commit -m "Description de la modification"
+git commit -m "Description of the change"
 ```
 
-Envoyer la branche sur GitHub :
+Push the branch to GitHub:
 
 ```bash
-git push -u origin feature/nom-fonctionnalite
+git push -u origin feature/feature-name
 ```
 
-Une demande de fusion doit ensuite être créée sur GitHub vers la branche `develop`.
+A merge request can then be created toward the `develop` branch.
 
 ---
 
-## Fichiers exclus du dépôt
+## Files excluded from the repository
 
-Le fichier `.gitignore` exclut notamment :
+The `.gitignore` file excludes notably:
 
-* les environnements virtuels ;
-* les caches Python ;
-* les caches de pytest ;
-* les bases SQLite locales ;
-* les fichiers contenant des variables d’environnement ;
-* les anciennes versions conservées dans `Old/` ;
-* la documentation locale conservée dans `docs/`.
+- virtual environments;
+- Python caches;
+- pytest caches;
+- local SQLite databases;
+- files containing environment variables;
+- local frontend dependencies such as `node_modules/`;
+- old versions stored in `Old/`;
+- local documentation stored in `docs/`.
 
-Les mots de passe, jetons d’accès et autres informations sensibles ne doivent jamais être ajoutés au dépôt.
-
----
-
-## Auteurs
-
-Projet réalisé dans le cadre de la Licence 2 Informatique.
-
-Membres du groupe :
-
-* Dominique ERIN;
-* Fatima CHOKRI;
-* Rokhaya-fall MEMMA.
-
-Enseignant correcteur :
-
-* Philippe KISLIN-DUVAL.
+Passwords, access tokens and other sensitive information must never be added to the repository.
 
 ---
 
-## Interface graphique, API et frontend web (nouvelle version)
+## Authors and contributions
 
-En plus du programme console d'origine (python main.py), le projet propose
-désormais une interface graphique de bureau (Tkinter), une API REST
-(FastAPI) et un frontend web (React), qui communiquent tous les trois avec
-la même base de données.
+Project developed as part of the **second year of a Computer Science degree**.
 
-### Prérequis supplémentaires
+### Dominique ERIN
 
-* Node.js 18 ou plus récent, pour le frontend (nécessite glibc >= 2.28 sous
-  Linux ; sur un système plus ancien, comme Ubuntu 18.04, préférer un test
-  sous Windows/macOS ou dans un conteneur Docker).
+- design and development of the Python backend;
+- business model design;
+- persistence with SQLAlchemy;
+- command-line version;
+- backend tests.
 
-### Configuration
+### Fatima CHOKRI
 
-Copier .env.example en .env à la racine du projet, et adapter si besoin
-(seule la variable DATABASE_URL est obligatoire, les autres ont une
-valeur par défaut) :
+- development of the REST API.
 
-cp .env.example .env
+### Rokhaya-fall MEMMA
 
-### Installation
+- development of the graphical interface.
 
-pip install -r requirements.txt
+### Supervising teacher
 
-### Peupler la base des établissements scolaires (une seule fois)
+- Philippe KISLIN-DUVAL.
 
-python main.py seed-etabs
+## License
 
-### Lancement (3 terminaux séparés)
+The source code authored by Dominique ERIN is made available for personal
+evaluation, educational review, and recruitment purposes only.
 
-Terminal 1 — l'API :
+Redistribution, derivative works, and commercial use are not permitted
+without prior written permission.
 
-uvicorn api.app:app --reload
+## See the [LICENSE](LICENSE) file for details.
 
-Terminal 2 — le frontend web (optionnel) :
+## Note about pyenv
 
-cd frontend
-npm install
-npm run dev
+If the `.python-version` file refers to a `pyenv` environment that does not exist on the current computer, it can be replaced by a compatible Python version installed locally.
 
-Terminal 3 — l'interface graphique :
+Example:
 
-python gui_main.py
-
-### Remarque pyenv
-
-Si le fichier .python-version référence un environnement pyenv qui
-n'existe pas sur votre machine (par exemple standalone-sqlalchemy), le
-remplacer par votre propre version installée, par exemple :
-
-echo "3.10.20" > .python-version
+```bash
+echo "3.11" > .python-version
+```
